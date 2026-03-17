@@ -1,0 +1,1236 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code実践ポートフォリオ — デジライズ コンサルタント応募</title>
+<style>
+  :root {
+    --dark: #0f0f1a;
+    --dark2: #1a1a2e;
+    --dark3: #252540;
+    --accent: #e87a54;
+    --accent-light: #f0a080;
+    --accent-bg: rgba(232,122,84,0.08);
+    --blue: #3db8e0;
+    --blue-light: #6dd3f5;
+    --blue-bg: rgba(61,184,224,0.08);
+    --text: #2c2c3e;
+    --text-sub: #6b7280;
+    --bg: #f7f8fb;
+    --white: #ffffff;
+    --border: #e5e7eb;
+    --success: #10b981;
+    --success-bg: rgba(16,185,129,0.08);
+    --card-shadow: 0 2px 16px rgba(0,0,0,0.05);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: #e8e8e8;
+    color: var(--text);
+    line-height: 1.75;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    min-height: 100vh;
+  }
+  #bg-canvas {
+    position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;
+  }
+  .hero, .layout, .footer {
+    position:relative;z-index:1;
+  }
+
+  /* ===== LAYOUT (Sidebar + Main) ===== */
+  .layout { display:flex;background:transparent; }
+  .sidebar {
+    position:sticky;top:0;width:208px;height:100vh;overflow-y:auto;padding:16px 0;
+    background:rgba(255,255,255,0.75);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-right:1px solid rgba(0,0,0,0.05);flex-shrink:0;z-index:50;
+  }
+  .sb-label { font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:#94a3b8;padding:12px 20px 6px; }
+  .sb-link {
+    display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:var(--text-sub);
+    text-decoration:none;transition:all 0.2s;border-left:3px solid transparent;cursor:pointer;position:relative;
+  }
+  .sb-link::before { content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:currentColor;opacity:0.05;transition:width 0.3s; }
+  .sb-link:hover::before { width:100%; }
+  .sb-link:hover { color:var(--text); }
+  .sb-link.active { color:var(--text);font-weight:700;border-left-color:var(--accent); }
+  .sb-dot { width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:transform 0.2s; }
+  .sb-link:hover .sb-dot { transform:scale(1.3); }
+  .sb-divider { border:none;border-top:1px solid rgba(0,0,0,0.05);margin:14px 16px; }
+  .main { flex:1;min-width:0; }
+
+  /* ===== SCROLL INDICATOR ===== */
+  .scroll-indicator {
+    position:fixed;right:7vw;top:50%;transform:translateY(-50%);
+    z-index:10;display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0.45;
+  }
+  .scroll-text {
+    writing-mode:vertical-rl;font-size:10px;font-weight:600;letter-spacing:4px;
+    color:#6b7280;text-transform:uppercase;
+  }
+  .scroll-line {
+    width:1px;height:80px;background:rgba(107,114,128,0.3);position:relative;overflow:hidden;
+  }
+  .scroll-line::after {
+    content:'';position:absolute;top:-100%;left:0;width:100%;height:60%;
+    background:linear-gradient(180deg,transparent,#e87a54,transparent);
+    animation:scrollPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0% { top:-100%; }
+    100% { top:200%; }
+  }
+  @media (max-width:1100px) {
+    .scroll-indicator { right:12px; }
+  }
+  @media (max-width:768px) {
+    .scroll-indicator { display:none; }
+  }
+
+  /* ===== HERO (B: Full-width Glass + Gradient Border Bottom) ===== */
+  .hero {
+    background:rgba(255,255,255,0.55);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    padding:56px 40px 44px;position:relative;overflow:hidden;
+    border-bottom:3px solid;border-image:linear-gradient(90deg,#e87a54,#c06dde,#7b5eea,#3db8e0) 1;
+  }
+  .hero::before {
+    content:'';position:absolute;top:-30%;right:-10%;width:500px;height:500px;
+    background:radial-gradient(circle,rgba(232,122,84,0.1),transparent 65%);border-radius:50%;
+  }
+  .hero::after {
+    content:'';position:absolute;bottom:-30%;left:10%;width:400px;height:400px;
+    background:radial-gradient(circle,rgba(123,94,234,0.07),transparent 65%);border-radius:50%;
+  }
+  .hero-inner { max-width:960px; margin:0 auto; position:relative; z-index:1; }
+  .hero-tag {
+    display:inline-block; background:linear-gradient(135deg,#e87a54,#c06dde); color:#fff;
+    font-size:11px; font-weight:700; letter-spacing:2px; padding:5px 14px;
+    border-radius:16px; margin-bottom:20px;
+  }
+  .hero h1 { font-size:30px; font-weight:800; line-height:1.4; margin-bottom:14px; color:#1a1a2e; }
+  .hero h1 em {
+    font-style:normal;
+    background:linear-gradient(135deg,#c06dde,#3db8e0);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  }
+  .hero-sub { font-size:14px; color:var(--text-sub); max-width:600px; line-height:1.8; }
+  .hero-stats { display:flex; gap:24px; margin-top:28px; padding-top:20px; border-top:1px solid rgba(0,0,0,0.06); flex-wrap:wrap; }
+  .hero-stat-num { font-size:22px; font-weight:800; color:#c06dde; line-height:1.2; }
+  .hero-stat-label { font-size:10px; color:#9ca3af; margin-top:2px; }
+
+  /* ===== CONTENT ===== */
+  .content { max-width:960px; margin:0 auto; padding:40px 32px 80px; }
+
+  /* ===== SECTION ===== */
+  .section { margin-bottom:52px; }
+  .section-header { display:flex; align-items:center; gap:14px; margin-bottom:24px; }
+  .section-num {
+    width:34px;height:34px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--accent),var(--blue));color:white;
+    font-size:14px;font-weight:800;border-radius:10px;flex-shrink:0;
+  }
+  .section-title { font-size:21px; font-weight:700; }
+
+  /* ===== CARD ===== */
+  .card {
+    background:var(--white); border-radius:2px 12px 12px 2px;
+    border-left:4px solid var(--accent); padding:24px 28px; margin-bottom:16px; box-shadow:var(--card-shadow);
+  }
+  .card.blue { border-left-color:var(--blue); }
+  .card.green { border-left-color:var(--success); }
+  .card.none { border-left:none; border-radius:12px; }
+  .card-title { font-size:15px; font-weight:700; margin-bottom:10px; }
+  .card p, .card li { font-size:14px; line-height:1.85; }
+  .card ul { list-style:none; padding:0; }
+  .card ul li { padding:4px 0 4px 18px; position:relative; }
+  .card ul li::before {
+    content:'';position:absolute;left:0;top:12px;width:6px;height:6px;border-radius:50%;background:var(--accent);
+  }
+  .card.blue ul li::before { background:var(--blue); }
+  .card.green ul li::before { background:var(--success); }
+
+  /* ===== IMPACT BOX ===== */
+  .impact-box {
+    background:linear-gradient(135deg,var(--dark),var(--dark2));color:white;
+    border-radius:16px;padding:36px;margin-bottom:20px;position:relative;overflow:hidden;
+  }
+  .impact-box::after {
+    content:'';position:absolute;top:0;right:0;width:40%;height:100%;
+    background:linear-gradient(135deg,transparent,rgba(232,122,84,0.06));
+  }
+  .impact-box h3 { font-size:17px;font-weight:700;color:var(--accent-light);margin-bottom:14px; }
+  .impact-box p { font-size:14px;line-height:1.9;color:rgba(255,255,255,0.85);position:relative;z-index:1; }
+  .impact-box strong { color:white; }
+
+  /* ===== HIGHLIGHT ===== */
+  .highlight {
+    background:linear-gradient(135deg,var(--accent-bg),var(--blue-bg));
+    border-radius:12px;padding:20px 28px;margin:16px 0;border:1px solid rgba(232,122,84,0.12);
+  }
+  .highlight p { font-size:14px;font-weight:600;line-height:1.8; }
+
+  /* ===== BEFORE/AFTER ===== */
+  .ba-grid { display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin-bottom:20px; }
+  .ba-col { background:var(--white);border-radius:12px;padding:24px 22px;box-shadow:var(--card-shadow); }
+  .ba-col.before { border-top:3px solid var(--text-sub); }
+  .ba-col.after { border-top:3px solid var(--accent); }
+  .ba-arrow { display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--accent);padding:0 14px;font-weight:800; }
+  .ba-label { font-size:11px;font-weight:700;letter-spacing:1.5px;color:var(--text-sub);margin-bottom:10px; }
+  .ba-col.after .ba-label { color:var(--accent); }
+  .ba-item { font-size:13px;padding:5px 0;color:var(--text);line-height:1.7; }
+
+  /* ===== CAREER TIMELINE (#6 numbered + #3 dot line) ===== */
+  .tl-wrap { position:relative;padding-left:28px; }
+  .tl-wrap::before {
+    content:'';position:absolute;left:5px;top:20px;bottom:20px;width:1px;background:#d1d5db;
+  }
+  .tl-item { display:flex;gap:16px;margin-bottom:20px;position:relative; }
+  .tl-item:last-child { margin-bottom:0; }
+  .tl-dot {
+    position:absolute;left:-28px;top:10px;width:10px;height:10px;border-radius:50%;
+    border:2px solid #e8e8e8;z-index:1;
+  }
+  .tl-num { font-size:32px;font-weight:800;color:rgba(232,122,84,0.15);line-height:1;flex-shrink:0;width:40px;text-align:center;padding-top:4px; }
+  .tl-body { background:var(--white);border-radius:12px;padding:20px 24px;box-shadow:var(--card-shadow);flex:1; }
+  .tl-company { font-size:15px;font-weight:700;color:var(--text); }
+  .tl-role { font-size:13px;color:var(--text-sub);margin-bottom:4px; }
+  .tl-detail { font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px; }
+  .tl-reason {
+    font-size:13px;color:var(--text-sub);line-height:1.8;margin-top:8px;
+    padding:14px 16px;background:#fff;border-radius:10px;box-shadow:0 1px 8px rgba(0,0,0,0.04);border:1px solid var(--border);
+    transition:box-shadow 0.2s,border-color 0.2s;
+  }
+  .tl-reason:hover { box-shadow:0 4px 16px rgba(192,109,222,0.12);border-color:rgba(192,109,222,0.2); }
+  .tl-reason-label {
+    font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--accent);margin-bottom:6px;
+  }
+  .tl-badge {
+    display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;
+    padding:2px 8px;border-radius:8px;margin-top:6px;background:var(--accent-bg);color:var(--accent);
+  }
+
+  /* ===== PRODUCT GRID ===== */
+  .product-card {
+    background:var(--white);border-radius:12px;padding:0;margin-bottom:20px;
+    box-shadow:var(--card-shadow);overflow:hidden;border:1px solid var(--border);
+  }
+  .product-card-img {
+    width:100%;height:200px;background:linear-gradient(135deg,#f0f1f5,#e8e9ed);
+    display:flex;align-items:center;justify-content:center;color:var(--text-sub);font-size:13px;font-weight:600;
+  }
+  .product-card-img img { width:100%;height:100%;object-fit:cover; }
+  .product-card-body { padding:22px 24px; }
+  .product-card-body h4 { font-size:16px;font-weight:700;margin-bottom:6px; }
+  .product-card-body .product-sub { font-size:12px;color:var(--text-sub);margin-bottom:10px; }
+  .product-card-body p { font-size:13px;line-height:1.75;color:var(--text); }
+  .product-tag {
+    display:inline-block;font-size:10px;font-weight:700;padding:3px 10px;
+    border-radius:10px;margin-right:6px;margin-bottom:6px;
+  }
+  .product-tag.done { background:var(--success-bg);color:var(--success); }
+  .product-tag.wip { background:rgba(245,158,11,0.1);color:#f59e0b; }
+
+  /* ===== SKILL GRID ===== */
+  .skill-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px; }
+  .skill-item {
+    background:var(--white);border-radius:10px;padding:14px 16px;box-shadow:var(--card-shadow);
+    border:1px solid var(--border);
+  }
+  .skill-item h5 { font-size:13px;font-weight:700;margin-bottom:4px; }
+  .skill-item p { font-size:11px;color:var(--text-sub);line-height:1.6; }
+
+  /* ===== SCREENSHOT PLACEHOLDER ===== */
+  .screenshot-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px; }
+  .screenshot-slot { background:var(--white);border-radius:12px;overflow:hidden;box-shadow:var(--card-shadow);border:1px solid var(--border); }
+  .screenshot-slot img { width:100%;height:auto;display:block; }
+  .screenshot-placeholder {
+    width:100%;height:200px;background:linear-gradient(135deg,#f0f1f5,#e8e9ed);
+    display:flex;align-items:center;justify-content:center;color:var(--text-sub);font-size:13px;font-weight:600;
+  }
+  .screenshot-caption { padding:12px 16px;font-size:13px;font-weight:600;border-top:1px solid var(--border); }
+  .screenshot-caption span { display:block;font-size:12px;font-weight:400;color:var(--text-sub);margin-top:2px; }
+
+  /* ===== CODE BLOCK ===== */
+  .code-block { background:var(--dark);border-radius:12px;padding:24px 28px;margin-bottom:16px;overflow-x:auto; }
+  .code-block pre {
+    font-family:'SF Mono','Fira Code','Consolas',monospace;font-size:12px;line-height:1.8;
+    color:rgba(255,255,255,0.8);white-space:pre-wrap;word-wrap:break-word;
+  }
+  .code-block .cm { color:rgba(255,255,255,0.35); }
+  .code-block .k { color:var(--accent-light); }
+  .code-block .v { color:var(--blue-light); }
+  .code-label { font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,0.4);margin-bottom:10px; }
+
+  /* ===== VALUE GRID ===== */
+  .value-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px; }
+  .value-item {
+    background:var(--white);border-radius:12px;padding:20px 22px;box-shadow:var(--card-shadow);
+    border:1px solid var(--border);
+  }
+  .value-item h4 { font-size:14px;font-weight:700;margin-bottom:6px; }
+  .value-item p { font-size:13px;color:var(--text-sub);line-height:1.7; }
+
+  /* ===== CRM FEATURE LIST ===== */
+  .feature-cols { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px; }
+  .feature-group h5 {
+    font-size:12px;font-weight:700;letter-spacing:1px;color:var(--accent);
+    margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border);
+  }
+  .feature-group.blue h5 { color:var(--blue); }
+  .feature-group ul { list-style:none;padding:0; }
+  .feature-group li { font-size:13px;padding:3px 0 3px 14px;position:relative;color:var(--text); }
+  .feature-group li::before { content:'';position:absolute;left:0;top:10px;width:5px;height:5px;border-radius:50%; }
+  .feature-group li::before { background:var(--accent); }
+  .feature-group.blue li::before { background:var(--blue); }
+
+  /* ===== EPISODE BOX ===== */
+  .episode {
+    background:var(--white);border-radius:12px;padding:24px 28px;margin-bottom:16px;
+    box-shadow:var(--card-shadow);border:1px dashed var(--border);
+  }
+  .episode-label { font-size:11px;font-weight:700;letter-spacing:1px;color:var(--blue);margin-bottom:8px; }
+  .episode p { font-size:14px;line-height:1.9; }
+
+  /* ===== CLOSING ===== */
+  .closing {
+    background:linear-gradient(135deg,var(--dark),var(--dark2));color:white;
+    border-radius:16px;padding:44px 36px;text-align:center;margin-bottom:20px;
+  }
+  .closing h3 { font-size:20px;font-weight:700;margin-bottom:14px;line-height:1.5; }
+  .closing p { font-size:14px;line-height:1.9;color:rgba(255,255,255,0.75);max-width:600px;margin:0 auto; }
+  .closing strong { color:white; }
+
+  /* ===== ACCORDION (Dot + Purple Glow) ===== */
+  details {
+    background:var(--white);border-radius:12px;margin-bottom:16px;
+    box-shadow:var(--card-shadow);transition:box-shadow 0.3s;
+  }
+  details[open] {
+    box-shadow:0 4px 24px rgba(192,109,222,0.2), 0 0 0 1px rgba(192,109,222,0.15);
+  }
+  summary {
+    padding:18px 24px;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;
+    list-style:none;display:flex;align-items:center;gap:12px;
+    transition:background 0.15s;
+  }
+  summary:hover { background:rgba(192,109,222,0.02); }
+  summary::-webkit-details-marker { display:none; }
+  .pulse-dot {
+    width:8px;height:8px;border-radius:50%;background:#c06dde;flex-shrink:0;
+    transition:background 0.3s;
+  }
+  details[open] .pulse-dot { background:var(--blue); }
+  .open-label {
+    margin-left:auto;font-size:11px;font-weight:600;letter-spacing:1px;color:#c06dde;flex-shrink:0;
+    transition:color 0.3s;
+  }
+  details[open] .open-label { color:var(--text-sub); }
+  .details-body { padding:0 24px 24px; }
+  .summary-sub { font-size:12px;font-weight:400;color:var(--text-sub);margin-top:2px; }
+
+  /* ===== MATCH TABLE ===== */
+  .match-table { width:100%;border-collapse:separate;border-spacing:0;margin-bottom:16px; }
+  .match-table th {
+    font-size:11px;font-weight:700;letter-spacing:0.5px;color:var(--text-sub);text-align:left;
+    padding:10px 14px;border-bottom:2px solid var(--border);
+  }
+  .match-table td {
+    font-size:13px;padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.7;
+  }
+  .match-table tr:last-child td { border-bottom:none; }
+  .match-table td:first-child { font-weight:600;white-space:nowrap;width:220px; }
+  .match-badge-ok {
+    display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;
+    background:var(--success-bg);color:var(--success);
+  }
+  .match-badge-partial {
+    display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;
+    background:rgba(245,158,11,0.1);color:#f59e0b;
+  }
+
+  /* ===== CONDITIONS ===== */
+  .conditions-grid { display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px; }
+  .condition-item {
+    background:var(--white);border-radius:10px;padding:16px 20px;box-shadow:var(--card-shadow);
+    border:1px solid var(--border);
+  }
+  .condition-item h5 { font-size:13px;font-weight:700;margin-bottom:4px;color:var(--text); }
+  .condition-item p { font-size:13px;color:var(--text-sub);line-height:1.6; }
+
+  /* ===== FOOTER ===== */
+  .footer { text-align:center; padding:28px 20px; font-size:12px; color:var(--text-sub); }
+  .footer-note { font-size:11px;color:var(--text-sub);opacity:0.6;margin-top:4px; }
+
+  @media (max-width:768px) {
+    .sidebar { display:none; }
+    .hero { padding:40px 20px 32px; }
+    .hero h1 { font-size:22px; }
+    .hero-stats { gap:16px; }
+    .content { padding:28px 16px 60px; }
+    .ba-grid { grid-template-columns:1fr; }
+    .ba-arrow { transform:rotate(90deg); padding:10px 0; }
+    .screenshot-grid { grid-template-columns:1fr; }
+    .value-grid { grid-template-columns:1fr; }
+    .feature-cols { grid-template-columns:1fr; }
+    .card { padding:18px 20px; }
+    .impact-box,.closing { padding:24px 20px; }
+    .skill-grid { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+
+<div class="scroll-indicator" id="scrollIndicator">
+  <span class="scroll-text">Scroll</span>
+  <div class="scroll-line"></div>
+</div>
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Claude Code Consultant &mdash; Application</div>
+    <h1>デジライズ様への提案書<br><em>人材紹介業界 x Claude Code</em><br>業界知見を持つ実践者が持ち込める価値</h1>
+    <p class="hero-sub">非エンジニアの経営者がClaude Codeで自社の業務を再構築した。その実物・設計思想・業界知見の全てを、御社のコンサル事業に提供します。</p>
+  </div>
+</div>
+
+<div class="layout">
+<nav class="sidebar">
+  <div class="sb-label">Contents</div>
+  <a class="sb-link active" href="#sec-career"><span class="sb-dot" style="background:#e87a54"></span>キャリア</a>
+  <a class="sb-link" href="#sec-why"><span class="sb-dot" style="background:#3db8e0"></span>なぜ応募するか</a>
+  <a class="sb-link" href="#sec-match"><span class="sb-dot" style="background:#10b981"></span>要件適合度</a>
+  <a class="sb-link" href="#sec-proposal"><span class="sb-dot" style="background:#c06dde"></span>提案</a>
+  <a class="sb-link" href="#sec-ba"><span class="sb-dot" style="background:#3db8e0"></span>Before / After</a>
+  <a class="sb-link" href="#sec-products"><span class="sb-dot" style="background:#7b5eea"></span>プロダクト</a>
+  <a class="sb-link" href="#sec-skills"><span class="sb-dot" style="background:#e87a54"></span>Skills + CLAUDE.md</a>
+  <hr class="sb-divider">
+  <a class="sb-link" href="#sec-conditions"><span class="sb-dot" style="background:#9ca3af"></span>稼働条件</a>
+  <a class="sb-link" href="#sec-questions"><span class="sb-dot" style="background:#9ca3af"></span>質問</a>
+</nav>
+<div class="main">
+<div class="content">
+
+  <!-- ===== 5. CAREER ===== -->
+  <div class="section" id="sec-career">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2 class="section-title">経歴</h2>
+    </div>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          京セラ → リクルート → 人材紹介会社 共同創業・副代表 → 現在（人材紹介会社 代表）
+          <div class="summary-sub">各社の実績・転職理由を含む詳細タイムライン</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body" style="margin-top:8px;">
+
+    <div class="tl-wrap">
+    <div class="tl-item"><div class="tl-dot" style="background:#e87a54;"></div>
+      <div class="tl-num">01</div>
+      <div class="tl-body">
+        <div class="tl-company">京セラ株式会社（2016年4月〜2018年4月）</div>
+        <div class="tl-role">海外営業 / ファインセラミックス事業部 / 北米市場担当</div>
+        <div class="tl-detail">半導体製造装置用部品の海外営業。世界No.1の半導体製造装置メーカー（Applied Materials）を担当。北米市場向けの納期調整・品質トラブルの改善を統括。</div>
+        <div class="tl-reason">
+          <div class="tl-reason-label">転職理由</div>
+          自分が供給した部品が製造装置になり、半導体チップが生まれ、AIが進化する。その構造を目の当たりにし「自分が頑張るほど、自分の仕事がAIに代替される」と実感。海外営業のスキルだけではAI時代に生き残れないと判断し、ビジネスの本質を学ぶためにリクルートへ。
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item"><div class="tl-dot" style="background:#c06dde;"></div>
+      <div class="tl-num">02</div>
+      <div class="tl-body">
+        <div class="tl-company">株式会社リクルート（2018年7月〜2019年4月 / 約1年9ヶ月）</div>
+        <div class="tl-role">リクルーティングアドバイザー（RA） / コンシューマーサービス事業部 / 中小企業向け法人営業</div>
+        <div class="tl-detail">toC向けサービスを展開する中小企業の経営者・役員・人事責任者に対し、採用課題のヒアリングからソリューション提案までを担当。法人向けコンサルティング営業の基礎を徹底的に鍛える。</div>
+        <div class="tl-badge">入社わずか1年で、80人中2番目の売上目標を担当</div>
+        <div class="tl-badge">当時在籍部署内で最短のグレードアップ</div>
+        <div class="tl-badge">MVP・表彰を複数回受賞</div>
+        <div class="tl-reason">
+          <div class="tl-reason-label">転職理由</div>
+          在籍1年ほどで前職の代表からアプローチを受け、副業から共同創業へ。「年功序列で安定」を手放してでも、ゼロから事業を作る挑戦を選んだ。
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item"><div class="tl-dot" style="background:#3db8e0;"></div>
+      <div class="tl-num">03</div>
+      <div class="tl-body">
+        <div class="tl-company">株式会社Will Location（2019年9月〜2025年11月 / 6年間）</div>
+        <div class="tl-role">共同創業・取締役副代表</div>
+        <div class="tl-detail" style="margin-bottom:8px;">コロナ禍でゼロから事業を立ち上げ、11名体制まで成長。以下の業務を横断的に経験:</div>
+        <div class="tl-detail" style="margin-bottom:8px;"><strong>1. キャリアアドバイザー（トップセールス）</strong><br>20代営業職を中心に、成長産業（M&A仲介・IT SaaS・人材・コンサルファーム・Webマーケ）への転職支援。個人としても業界トップクラスの実績</div>
+        <div class="tl-detail" style="margin-bottom:8px;"><strong>2. オペレーション構築・改善</strong><br>業務全体における事業インパクトが大きいポイントの課題を特定し改善</div>
+        <div class="tl-detail" style="margin-bottom:8px;"><strong>3. マネジメント</strong><br>メンバーの課題を特定し改善を繰り返し、社内平均年収2,200万円超の組織を実現。人の心を動かし、高い目標を達成し続けるチームを構築</div>
+        <div class="tl-detail" style="margin-bottom:8px;"><strong>4. 採用</strong><br>キーエンス メイン部署全国1位、MR 800人中1位、大和証券 社長賞、キリン、トヨタなど日本を代表する企業やトップセールスの採用を実現。エージェント向け自社説明会の企画・実施、採用ボトルネックの特定と改善</div>
+        <div class="tl-detail" style="margin-bottom:8px;"><strong>5. バックオフィス</strong><br>請求書発行業務等の管理業務も担当</div>
+        <div class="tl-badge">6期にわたり事業を牽引</div>
+        <div class="tl-badge">売上 約5.5-6億円 / 営業利益 1.4億円</div>
+        <div class="tl-badge">社内平均年収 2,200万円超</div>
+        <div class="tl-badge">人気企業における支援実績がトップ水準の企業多数</div>
+        <div class="tl-badge">M&A Capital Partners（年収ランキング全国1位企業）— 全国の全エージェントの中でNo.1の支援実績（2024年度）</div>
+        <div class="tl-reason">
+          <div class="tl-reason-label">退任理由</div>
+          AI時代において、ソロプレナーとして機動力を持ちつつ自分がやりたいことに全力で取り組める環境に身を置きたいと考えたため。自身が保有していた株式を売却し、金銭的余裕を得た状態で次のフェーズにチャレンジ。前職との関係は良好で、競業避止等もありません。
+        </div>
+      </div>
+    </div>
+
+    <div class="tl-item"><div class="tl-dot" style="background:#10b981;"></div>
+      <div class="tl-num">04</div>
+      <div class="tl-body">
+        <div class="tl-company">株式会社Encore Partners（2025年12月〜 / 現在）</div>
+        <div class="tl-role">代表取締役</div>
+        <div class="tl-detail" style="margin-bottom:8px;">人材紹介業を経営。2026年4月に人材紹介免許を取得予定（申請中）。対象の求職者・企業は前職同様、20代営業職 x 成長産業。2026年7月に1名入社予定。</div>
+        <div class="tl-detail">免許取得に向けた準備期間中、Claude Code（Maxプラン $200/月 自費契約）で業務オペレーション全体を再構築中。毎日17時から深夜1時まで没頭し、1時を過ぎても「まだやりたい」のに泣く泣くオフィスを出る日々。Claude Codeを使い始めてからは、他のAIツールはほとんど使わなくなった。</div>
+      </div>
+    </div>
+
+    </div><!-- /tl-wrap -->
+
+      </div>
+    </details>
+  </div>
+
+
+  <!-- ===== 7. WHY ===== -->
+  <div class="section" id="sec-why">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2 class="section-title">なぜこのポジションに応募するのか</h2>
+    </div>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          なぜClaude Code導入コンサルなのか — 人生の3条件が揃うポジション
+          <div class="summary-sub">興味ある領域 x 成長 x 誰かに教える。退屈の反対が幸せ</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body" style="margin-top:8px;">
+        <div class="tl-body" style="margin-bottom:12px;">
+          <div class="tl-detail" style="margin-bottom:12px;">人生はどうせ死ぬ。死ぬまで退屈は嫌だ。退屈がない状態 = 幸せだと定義しています。幸せであるために必要な3つの条件:</div>
+          <div class="tl-detail" style="margin-bottom:4px;"><strong>1. 自分が心から興味ある領域に携わっていること</strong></div>
+          <div class="tl-detail" style="margin-bottom:4px;"><strong>2. それを通じて成長していること</strong></div>
+          <div class="tl-detail" style="margin-bottom:12px;"><strong>3. それを誰かに教えていること</strong></div>
+          <div class="tl-detail">Claude Code導入コンサルタントは、この3つが全て揃う稀有なポジションです。Claude Codeに夢中になっている今の自分の興味と、9-10年間培ってきた「相手のレベルに合わせて教える力」が、そのまま活きる場所です。</div>
+        </div>
+        <div class="tl-reason">
+          <div class="tl-reason-label">興味で動く人間の実例</div>
+          前職を退任後、3社の人材紹介会社から顧問オファーをいただきましたが、全てお断りしています。<strong>興味がなかったから</strong>です。一方で、小学校の友人の奥さんが事業立ち上げで困っていると聞いた時は、深夜1時、2時まで無償でサポートしました。<strong>内容に興味があったから。</strong>金で動かない代わりに、興味で動く人間です。
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          なぜデジライズか — チャエン様と自分の掛け算でしか実現できないことがある
+          <div class="summary-sub">影響力 x 業界知見 x Claude Code実践。この組み合わせは他にない</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body" style="margin-top:8px;">
+        <div class="tl-body" style="margin-bottom:12px;">
+          <div class="tl-detail" style="margin-bottom:8px;">チャエン様のXやYouTubeでの発信を日常的に見ています。日本を代表するAI情報発信者としての影響力と信頼性はもちろんですが、特に感じるのは以下の3つです:</div>
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>1. 情報を惜しみなく出す姿勢</strong><br>表面的な発信だけでなく、実際にClaude Codeを触っている人向けの深いレベルの情報まで公開されている。これは「日本のAI普及率を本気で上げたい」という意思の表れだと感じます</div>
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>2. 情報キャッチからの展開スピード</strong><br>新しい情報をキャッチしたら即座に発信される。このスピード感は、自分がClaude Codeに夢中で毎日触っているからこそ「早い」と実感できます</div>
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>3. 「ラストワンマイル」への本気度</strong><br>ツールを紹介して終わりではなく、導入後に「使いこなせるまで」をサポートする事業設計。これは自分がCAとして「内定がゴールではなく、転職後に後悔しない状態がゴール」としてやってきたことと同じ構造です</div>
+        </div>
+        <div class="tl-reason">
+          <div class="tl-reason-label">デジライズだからこそ実現できること</div>
+          チャエン様のブランドと影響力があるからこそ、クライアントへのアポイントの確度が上がり、受注の機会が増える。機会の量は質に転化されます。一人で動くのと、デジライズの看板で動くのでは、到達できるスピードとスケールが全く違います。
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          このポジションで実現したいこと — 自分自身の「体現者」としての進化
+          <div class="summary-sub">AI領域の支援を事業の柱に。業界標準ツールの構築。体現者としての説得力</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body" style="margin-top:8px;">
+        <div class="tl-body" style="margin-bottom:12px;">
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>1. 人材紹介業界へのAI導入を事業の柱にする</strong><br>人材紹介業界の中にいた人間が、AIによる業務効率化を自ら実践し、そのノウハウをもとに同業界のクライアントを支援する。加えて、AI領域に携わりたい求職者の支援や、AI領域のポジションを扱う企業からの信頼も得られる。求職者と企業の両面からAI領域の支援が可能になることを、今後の事業の柱の一つにしたいと考えています</div>
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>2. 「体現者」としての説得力を持つ</strong><br>私は求職者に対して「ポータブルスキルを身につけるべき」「興味があることに挑戦できる状態を作るべき」と伝えてきました。そう言うからには、自分自身がそれを体現している必要がある。Claude Code x AIコンサルという、みんなが興味を持つ領域で実際に動いていること自体が、CAとしての信頼と説得力を増すと考えています</div>
+          <div class="tl-detail"><strong>3. 業界標準ツールを作る</strong><br>今まさに自分のCRMで構築している全業務自動化の仕組みを、業界全体で使える標準ツールに育てたい。デジライズ様のクライアントベースを通じて、この構想を検証・拡大できる環境は他にありません</div>
+        </div>
+        <div class="tl-reason">
+          <div class="tl-reason-label">熱量の源泉</div>
+          熱量の高い人の近くにいると、自分の炎がさらに燃えるという感覚があります。チャエン様の絶え間ない発信と行動力を間近で見ることで、自分のエネルギーも増す。これは努力でも市場価値向上でもなく、純粋にゲーム感覚の知的探求心。ADHD特性で一度ハマったら止まらない思考体力があります。
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          なぜ今このタイミングか — 「誰かがやるなら、自分が最初にやる」
+          <div class="summary-sub">Claude Codeへの衝撃、先行者利益、経験者採用になる前に</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body" style="margin-top:8px;">
+        <div class="tl-body">
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>1. Claude Codeに出会った衝撃</strong><br>2026年2月にClaude Codeを触り始め、1ヶ月間没頭した時に確信しました。今までのAIとはレベルが違う。ChatGPTやGemini、GASの自動化とは次元が異なることが、これからどんどん広まっていく。たまたまXのタイムラインで求人を見つけた時、「これはまさに自分がやるべきだ」と直感しました</div>
+          <div class="tl-detail" style="margin-bottom:8px;"><strong>2. 「あの時やればよかった」と思いたくない</strong><br>自分が価値を発揮できる業界・顧客に対してAIによる自動化・効率化を提供することは、結局誰かがやります。その時に「自分があの時やっていれば」と後悔する未来が一番嫌です。誰かがやるなら、自分が最初にやる</div>
+          <div class="tl-detail"><strong>3. 時間がある今だからこそ</strong><br>前職と違い、社員教育や採用にかかる時間がない。さらにキャリアアドバイザー業務もバックオフィスもClaude Codeで業務効率化を進めており、今まで以上に圧倒的に時間が浮くと考えています。なんなら集客が間に合わず手持ち無沙汰になる可能性すらある。だからこそ、自分が興味あることに時間を注ぎたい。そもそもソルジャーマインドなので、時間は作ればいいだけのものと考えています</div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- ===== 6. REQUIREMENTS MATCH ===== -->
+  <div class="section" id="sec-match">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2 class="section-title">求人要件との適合度</h2>
+    </div>
+
+    <details open>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          必須要件 — 5項目全て充足
+          <div class="summary-sub">Claude Code実務、Maxプラン契約、法人コンサル経験、開発経験、東京対面</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="card none" style="padding:0;overflow:hidden;margin-top:4px;">
+      <table class="match-table">
+        <thead>
+          <tr><th>必須要件</th><th>適合度</th><th>具体的な根拠</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Claude Code日常活用<br>(CLAUDE.md / Skills / MCP)</td>
+            <td><span class="match-badge-ok">充足</span></td>
+            <td>2026年2月から毎日使用。CLAUDE.md 2層設計、Skills 10種類以上自作、Notion MCP連携済み</td>
+          </tr>
+          <tr>
+            <td>月額200ドル以上プラン<br>契約・運用実績</td>
+            <td><span class="match-badge-ok">充足</span></td>
+            <td>Maxプラン$200/月を自費契約中。従量課金$190→Maxに移行</td>
+          </tr>
+          <tr>
+            <td>法人コンサル or 研修<br>の実務経験</td>
+            <td><span class="match-badge-ok">充足</span></td>
+            <td>リクルートRA（法人営業）2年 + CA 400-500名指導 + 9名マネジメント育成</td>
+          </tr>
+          <tr>
+            <td>AIコーディングツールを<br>使った開発経験</td>
+            <td><span class="match-badge-ok">充足</span></td>
+            <td>CRM（Next.js/Supabase）、Task Chase（FastAPI）、SNS自動化（Streamlit）、業界レポート（HTML生成）を全てClaude Codeで構築</td>
+          </tr>
+          <tr>
+            <td>東京都内での<br>対面勤務が可能</td>
+            <td><span class="match-badge-ok">充足</span></td>
+            <td>浜松町への出社可能。週3出社のハイブリッド勤務に対応可</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          歓迎要件 — 7項目中6項目該当、1項目設計中
+          <div class="summary-sub">Claude API、Python/TS、スタートアップ、DX推進、法人研修、複数AIツール</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="card none" style="padding:0;overflow:hidden;margin-top:4px;">
+      <table class="match-table">
+        <thead>
+          <tr><th>歓迎要件</th><th>適合度</th><th>具体的な根拠</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Claude API開発経験</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>CRM・Task Chase・SNS自動化の全てでClaude APIを使用。Sonnet/Haiku/Opusの使い分けも実践</td>
+          </tr>
+          <tr>
+            <td>RAG・AIエージェント設計</td>
+            <td><span class="match-badge-partial">設計中</span></td>
+            <td>Agent SDKを活用したスカウト文面自動生成を設計中。deepdiveスキルはエージェント的な自律調査を実装済み</td>
+          </tr>
+          <tr>
+            <td>DX推進コンサルティング</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>自社の業務をClaude Codeで丸ごとDX推進した実体験あり。スプレッドシート→CRM移行を自ら設計・実行</td>
+          </tr>
+          <tr>
+            <td>法人研修の企画・実施</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>面接対策を数百回実施（=研修の実質経験）。9名の部下育成で個別育成プランを設計・運用</td>
+          </tr>
+          <tr>
+            <td>Python / TypeScript</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>Python: FastAPI（Task Chase）。TypeScript: Next.js（CRM）。いずれもClaude Codeで実装</td>
+          </tr>
+          <tr>
+            <td>スタートアップ経験</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>共同創業6期。ゼロイチ立ち上げから売上6億まで。現在もマイクロ法人を経営中</td>
+          </tr>
+          <tr>
+            <td>複数AIツール横断利用</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>Claude Code（メイン）、ChatGPT、Grok API（X検索）、Whisper API（設計中）</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          求める人物像 — 5項目全て該当
+          <div class="summary-sub">毎日使い倒す、ビジョン共感、技術×ビジネス、対面重視、知的好奇心</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="card none" style="padding:0;overflow:hidden;margin-top:4px;">
+      <table class="match-table">
+        <thead>
+          <tr><th>求める人物像</th><th>適合度</th><th>具体的な根拠</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Claude Codeを<br>「毎日使い倒す」レベル</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>毎晩深夜1時まで夢中で触っている。1.5ヶ月で10+ Skills・27機能CRM・4プロダクト構築</td>
+          </tr>
+          <tr>
+            <td>「日本のAI活用率を<br>世界一にする」に共感</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>人材紹介業界のAI導入を加速させることで、このビジョンに直接貢献できると確信</td>
+          </tr>
+          <tr>
+            <td>技術とビジネスの<br>両面を理解</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>経営者（ビジネス） x Claude Code実践者（技術）。非エンジニアながらCRM・APIシステムを設計・実装</td>
+          </tr>
+          <tr>
+            <td>対面コミュニケーション重視</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>CA歴9-10年。1対1で400-500名と対面で向き合ってきた。法人営業でも多数の対面折衝</td>
+          </tr>
+          <tr>
+            <td>知的好奇心と行動力</td>
+            <td><span class="match-badge-ok">該当</span></td>
+            <td>ADHD特性で興味への集中力が異常に高い。1.5ヶ月の構築密度がその証拠</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- ===== 1. PROPOSAL ===== -->
+  <div class="section" id="sec-proposal">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2 class="section-title">デジライズ様への提案 — 人材紹介業界 x Claude Code</h2>
+    </div>
+
+    <div class="impact-box">
+      <h3>私の最強の武器は「人材紹介会社の痛みが分かる」こと</h3>
+      <p>
+        Claude Code導入コンサルで最も難しいのは、クライアントの業務課題に対する正確な仮説を立てることです。特に人材紹介業界は、外から見ただけでは痛みの本質が分かりにくい業界です。<br><br>
+        私は9-10年間この業界の中にいて、<strong>トッププレイヤーとして自ら成果を出し、経営者としてオペレーションを設計し、マネジメントとして部下を育ててきました</strong>。業界の中で「何が本当に時間を食っているか」「何がミスの原因になるか」「何を自動化すれば一番インパクトが大きいか」を、実体験から語れます。<br><br>
+        <strong>この解像度は、異業界から来たコンサルタントでは出せません。</strong>そして、私は既にその知見をClaude Codeで実際のプロダクト（CRM 27機能、業界レポート12業界）として形にしています。
+      </p>
+    </div>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          事業への3つの視点 — 人材紹介業界で経験した構造的課題から
+          <div class="summary-sub">競合優位性の確保、研修とコンサルの違い、非エンジニア向け研修の設計</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+        <div class="card blue" style="margin-top:4px;">
+          <div class="card-title">視点 1 — 「広く浅く」から「深く狭く」への転換点</div>
+          <p style="margin-bottom:12px">人材紹介業界では、総合型エージェントが専門エージェントにリプレイスされる現象が起きます。クライアントが求めているのは「AIツールの使い方」ではなく「自分の業務の痛みを理解した上での解決策」だからです。</p>
+          <p style="margin-bottom:12px">Claude Codeコンサル事業でも、今後競合が出てきた時に同じ構造の課題が生まれます。差別化の鍵は<strong>「クライアントのインサイトをどこまで深く理解し、期待以上の成果物を納品できるか」</strong>。</p>
+          <p><strong>私が人材紹介業界という「深い領域」を持ち込めることは、幅広さと深さの両立への第一歩になると考えています。</strong></p>
+        </div>
+        <div class="card">
+          <div class="card-title">視点 2 — 「研修」と「コンサル」は別の筋肉</div>
+          <p style="margin-bottom:12px">研修は「型を教える」仕事、コンサルは「課題を特定して解決策を設計する」仕事。人材紹介でいうと「求人紹介だけのエージェント」と「キャリア設計から入るエージェント」の違いです。<strong>クライアントが本当に価値を感じるのは後者</strong>です。</p>
+          <p>Claude Codeコンサルを「業務課題の特定→解決策設計→導入→定着」の一気通貫サービスとして位置づけることで、競合との差別化と単価の向上が可能になるのではないかと考えています。</p>
+        </div>
+        <div class="card green">
+          <div class="card-title">視点 3 — 非エンジニアに教えるなら、非エンジニアが一番分かっている</div>
+          <p style="margin-bottom:12px">クライアントの大半は非エンジニア。エンジニアが教えると<strong>「どこでつまずくか」が見えない</strong>構造的ギャップが生まれます。</p>
+          <p>私はプログラミング経験ゼロから始めた「つまずきポイントの地図」を持っています。これは意図して作れるものではなく、<strong>自分が実際にその道を通ったからこそ持てるもの</strong>です。</p>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          人材紹介会社に提案できる具体的な業務効率化 6選
+          <div class="summary-sub">スカウト自動生成、業界レポート、選考管理、議事録チェーン、AI模擬面接、ヨミ表</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+        <div class="card" style="margin-top:4px;">
+          <ul>
+            <li><strong>スカウト文面の自動生成</strong> — ビズリーチ返信率2.5-3%の高返信率テンプレートをベースに、候補者プロフィールに合わせたパーソナライズ文面を一括生成</li>
+            <li><strong>業界レポートの即時生成</strong> — 面談前に1コマンドで業界の退職理由・心理的背景・切り返しトークを自動調査。面談の質を劇的に向上</li>
+            <li><strong>選考管理の自動化</strong> — 停滞案件の自動検知、日程調整の自動化、アラート13種類で漏れをゼロに</li>
+            <li><strong>議事録→職務経歴書→推薦文の自動生成チェーン</strong> — 面談録音から議事録→職務経歴書ドラフト→推薦文を自動生成。CAの作業時間を大幅削減</li>
+            <li><strong>AI模擬面接</strong> — 音声ベースの面接練習+AIフィードバック。将来的にはビデオ版で表情分析・フィラー検出まで</li>
+            <li><strong>ヨミ表（売上予測）のリアルタイム管理</strong> — スプレッドシートから脱却し、期待値粗利の自動計算・グラフ化</li>
+          </ul>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          なぜ私がこの提案をできるのか — 実績・設計力・希少性
+          <div class="summary-sub">トッププレイヤー実績、経営者視点のオペレーション設計、3要素の構造的希少性</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+        <div class="card blue" style="margin-top:4px;">
+          <div class="card-title">3つの根拠</div>
+          <ul>
+            <li><strong>トッププレイヤーとしての実績</strong> — Q粗利3,000万円。M&A Capital Partners支援実績で全国の全エージェント中No.1（2024年度）。何が成果に直結するかを体感で知っている</li>
+            <li><strong>経営者としてのオペレーション設計</strong> — 11名組織をゼロから設計。「インパクトが大きいところから」の優先度判断を経営者目線で</li>
+            <li><strong>既にプロダクトとして形にしている</strong> — CRM 27機能、業界レポート12業界は「提案」ではなく「実物」</li>
+          </ul>
+        </div>
+        <div class="card green">
+          <div class="card-title">構造的に希少な組み合わせ</div>
+          <p style="margin-bottom:10px">Claude Code導入コンサルに必要な3要素:</p>
+          <ul>
+            <li><strong>業務課題を理解する力</strong> — 業界知見 + 法人営業経験</li>
+            <li><strong>Claude Codeを使い倒している実績</strong> — Skills / MCP / CLAUDE.md設計</li>
+            <li><strong>相手に合わせて教える力</strong> — 400-500名の1対1指導 + マネジメント</li>
+          </ul>
+          <p style="margin-top:10px">この3つが揃うのは、9-10年間業界の中で成果を出し、経営とマネジメントを経験し、Claude Codeで事業を再構築した、というキャリアの必然です。</p>
+        </div>
+      </div>
+    </details>
+
+    <div class="highlight">
+      <p>人材紹介業界が最もクリティカルに価値を出せる領域ですが、それだけではありません。CAとして12業界以上の営業プロセスを理解しており、「業務全体を可視化→インパクトが大きい自動化ポイントを特定」するアプローチは業界を問わず応用可能です。M&A仲介、IT SaaS、コンサルファーム、Webマーケ等、多業種のクライアントに対しても同様の価値を提供できると考えています。</p>
+    </div>
+  </div>
+
+
+  <!-- ===== 2. BEFORE/AFTER ===== -->
+  <div class="section" id="sec-ba">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2 class="section-title">Before / After — クライアントにも再現可能な変化</h2>
+    </div>
+
+    <div class="ba-grid">
+      <div class="ba-col before">
+        <div class="ba-label">2025年11月（前職退任時）</div>
+        <div class="ba-item">プログラミング経験ゼロ</div>
+        <div class="ba-item">業務ツールはスプレッドシート中心</div>
+        <div class="ba-item">業界レポート・候補者資料は全て手作業</div>
+        <div class="ba-item">タスク管理は紙とLINEメモ</div>
+        <div class="ba-item">AI活用はChatGPTでの文章生成程度</div>
+      </div>
+      <div class="ba-arrow">&rarr;</div>
+      <div class="ba-col after">
+        <div class="ba-label">2026年3月（Claude Code導入1.5ヶ月後）</div>
+        <div class="ba-item">CRM（27機能設計）を自力で構築中</div>
+        <div class="ba-item">業界レポートは1コマンドで12業界分を自動生成</div>
+        <div class="ba-item">LINE AIがタスクを追跡し、深掘り調査まで自動実行</div>
+        <div class="ba-item">CLAUDE.md 2層設計 + Skills 10種類以上を運用</div>
+        <div class="ba-item">Notion MCP連携でデータベースを直接操作</div>
+      </div>
+    </div>
+
+    <div class="highlight">
+      <p>この変化は私個人の話ではなく、クライアント企業にも再現可能です。非エンジニアの経営者・事業責任者が、CLAUDE.mdとSkillsの設計次第で業務を劇的に変えられるという実証データ。例えば業界レポートは手作業で半日以上 → 自動生成で数分。この「自分が実験台になった結果」をコンサルの説得材料としてそのまま使えます。</p>
+    </div>
+  </div>
+
+
+  <!-- ===== 3. PRODUCTS ===== -->
+  <div class="section" id="sec-products">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2 class="section-title">構築したプロダクト — コンサルの説得材料そのもの</h2>
+    </div>
+
+    <details open>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          人材紹介CRM — 全業務の自動化基盤
+          <div class="summary-sub">27機能設計 / Next.js + Supabase / コア機能実装済み・AI機能設計完了</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <!-- CRM -->
+    <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
+      <div class="product-card-img">
+        <!-- RIO: ここにCRMのスクショを挿入 -->
+        スクリーンショット挿入エリア
+      </div>
+      <div class="product-card-body">
+        <div>
+          <span class="product-tag wip">構築中（コア機能実装済み）</span>
+        </div>
+        <h4>人材紹介CRM — 全業務の自動化基盤</h4>
+        <div class="product-sub">Next.js + Supabase + Vercel + shadcn/ui</div>
+        <p style="margin-bottom:12px">
+          <strong>課題:</strong> 人材紹介業務の管理がスプレッドシートに散在。候補者情報、選考進捗、売上予測、タスクがバラバラで、管理コストが高くミスも発生しやすい。<br>
+          <strong>解決:</strong> 候補者管理・選考管理・ヨミ表（売上予測）・タスク管理を一元化するCRMをClaude Codeで設計・実装。セキュリティを最重要設計方針として組み込み。<br>
+          <strong>効果:</strong> 全業務を1つのシステムから操作可能に。ヨミ表はリアルタイムで期待値粗利を自動計算。選考管理はフェーズ別のビジュアル管理で停滞案件を即座に検知。
+        </p>
+      </div>
+    </div>
+
+    <div class="feature-cols">
+      <div class="feature-group">
+        <h5>実装済み・設計確定</h5>
+        <ul>
+          <li>ヨミ表（売上予測 / 22列 / 6段階の読みレベル）</li>
+          <li>選考管理（フェーズ別ビジュアル / 停滞検知）</li>
+          <li>候補者管理（プロフィール・経歴登録）</li>
+          <li>タスク管理（全タスク対応）</li>
+          <li>ダッシュボード（KPI可視化）</li>
+          <li>DB設計 10テーブル + RLSセキュリティ</li>
+        </ul>
+      </div>
+      <div class="feature-group blue">
+        <h5>AI機能（設計完了 / 順次実装）</h5>
+        <ul>
+          <li>スカウト文面のAI自動生成（媒体別最適化）</li>
+          <li>議事録の自動生成（Whisper + Claude）</li>
+          <li>職務経歴書のAIドラフト作成</li>
+          <li>推薦文のAI自動生成</li>
+          <li>面接練習のビデオ録画+AIフィードバック</li>
+          <li>選考日程の自動調整（Googleカレンダー連携）</li>
+          <li>アラート・リマインダー自動化（13種類）</li>
+          <li>企業ごとの選考パターンDB化</li>
+          <li>パイプライン売上予測</li>
+          <li>多媒体間の重複チェック</li>
+        </ul>
+      </div>
+    </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          Task Chase System — LINE AIタスク管理
+          <div class="summary-sub">稼働中 / FastAPI + LINE + Claude API / タスク漏れゼロ+自動調査</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
+      <div class="product-card-img">
+        <!-- RIO: ここにTask Chase Systemのスクショを挿入 -->
+        スクリーンショット挿入エリア
+      </div>
+      <div class="product-card-body">
+        <div>
+          <span class="product-tag done">稼働中</span>
+        </div>
+        <h4>Task Chase System — LINE AIタスク管理</h4>
+        <div class="product-sub">FastAPI + LINE Messaging API + Claude API + Google Tasks API / Railway</div>
+        <p>
+          <strong>課題:</strong> ADHD特性があり、カレンダーやタスクアプリを開く行為自体が続かない。タスクが漏れ、調べ物も億劫で後回しになる。<br>
+          <strong>解決:</strong> LINEに話しかけるだけでタスク登録。AIが毎朝リマインドし、完了するまで追いかける。さらに「deepdive」スキルと連携し、タスクに必要な情報をWeb検索+YouTube字幕取得で自動調査、HTMLレポートを生成してRailwayに配信。<br>
+          <strong>効果:</strong> タスク漏れがゼロに。調査の心理的ハードルが消え、「とりあえずLINEに投げれば、翌朝には調査レポートが届いている」状態を実現。ビジュアルが良いのでやる気も持続。
+        </p>
+      </div>
+    </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          業界レポート自動生成システム
+          <div class="summary-sub">12業界完成 / 1コマンドで退職理由・心理的背景・切り返しトークを自動生成</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
+      <div class="product-card-img">
+        <!-- RIO: ここに業界レポートのスクショを挿入 -->
+        スクリーンショット挿入エリア
+      </div>
+      <div class="product-card-body">
+        <div>
+          <span class="product-tag done">12業界完成</span>
+        </div>
+        <h4>業界レポート自動生成システム</h4>
+        <div class="product-sub">Claude Code Skill（industry-report-html）/ Web検索 + YouTube字幕取得</div>
+        <p>
+          <strong>課題:</strong> キャリアアドバイザーとして業界知識のインプットは必須だが、1業界あたり半日以上かかる。面談中にすぐ参照できる資料もなかった。<br>
+          <strong>解決:</strong> 1コマンドで業界の退職理由・心理的背景・切り返しトークを自動調査・HTML生成するSkillを構築。30-40件以上のWeb検索+YouTube字幕抽出で徹底的に情報を収集。面談中にチラ見できるビジュアルHTMLレポートを自動生成。<br>
+          <strong>効果:</strong> 12業界分のレポートを量産。面談の質が向上し、候補者の「この人は自分の業界を理解している」という信頼感の獲得が早まった。
+        </p>
+        <p style="margin-top:8px;font-size:12px;color:var(--blue);"><!-- RIO: サンプルURLがあれば追記 → <a href="URL">実際のレポートサンプルを見る</a> --></p>
+      </div>
+    </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          SNS自動投稿プラットフォーム
+          <div class="summary-sub">構築中 / Streamlit + Claude API / コンテンツ自動生成+スケジュール管理</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
+      <div class="product-card-img">
+        <!-- RIO: ここにSNS自動化のスクショを挿入 -->
+        スクリーンショット挿入エリア
+      </div>
+      <div class="product-card-body">
+        <p>
+          <strong>課題:</strong> 集客のためにSNS発信が必要だが、コンテンツ作成に時間がかかり後回しになる。<br>
+          <strong>解決:</strong> Claude APIでコンテンツを自動生成し、Google Sheetsでスケジュール管理。Streamlit UIから一括操作。<br>
+          <strong>効果:</strong> コンテンツ作成の時間を削減し、発信の継続性を確保。
+        </p>
+      </div>
+    </div>
+      </div>
+    </details>
+  </div>
+
+
+  <!-- ===== 4. SKILLS + CLAUDE.md ===== -->
+  <div class="section" id="sec-skills">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2 class="section-title">Skills + CLAUDE.md設計 — クライアント環境に展開可能</h2>
+    </div>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          セキュリティ設計思想 + CLAUDE.md抜粋
+          <div class="summary-sub">会社経営で培ったリスク管理をCLAUDE.mdに反映</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="card" style="margin-top:4px;">
+      <div class="card-title">セキュリティ設計思想 — 会社経営で培ったリスク管理の延長線</div>
+      <p style="margin-bottom:12px">前職で11名の組織を経営する中で、情報漏洩リスク・セキュリティ管理は常に最優先事項でした。人材紹介業は個人情報の塊であり、一度の漏洩で事業が終わります。その経験をCLAUDE.mdのセキュリティポリシーにそのまま反映しています。</p>
+      <ul>
+        <li><strong>APIキー・機密情報はClaude Codeに絶対渡さない</strong> — .env管理、.claudeignore設置、環境変数一覧コマンドの実行禁止</li>
+        <li><strong>スクリーンショット内の機密情報を自動検知</strong> — 映り込みに即座に警告し再発行を推奨</li>
+        <li><strong>個人情報の匿名化ルール</strong> — 候補者の実名・年齢・勤務先は全て匿名化してからClaude Codeに渡す運用を徹底</li>
+        <li><strong>既存ファイルの保護</strong> — 上書き前の確認必須、削除コマンドの原則禁止</li>
+      </ul>
+      <p style="margin-top:12px">このセキュリティポリシーの設計ノウハウは、そのまま法人クライアントのClaude Code導入時に展開できます。</p>
+    </div>
+
+    <div class="code-block">
+      <div class="code-label">CLAUDE.md — セキュリティポリシー抜粋</div>
+      <pre><span class="cm"># 機密情報の予防・検知</span>
+
+<span class="k">予防（そもそも渡させない）:</span>
+  <span class="v">APIキーの設定場面 → 「.envに自身で貼ってください」と案内</span>
+  <span class="v">printenv / env / set → 絶対に実行しない</span>
+  <span class="v">新サービス導入時 → 先回りで「キーは私に見せないで」と案内</span>
+
+<span class="k">検知（渡してしまった時の即時警告）:</span>
+  <span class="v">スクリーンショットに機密情報 → 即警告 + 再発行推奨</span>
+  <span class="v">会話内にキー貼付 → 同様に警告</span>
+
+<span class="cm"># トークン自己監視 — セッション間の作業引き継ぎを仕組み化</span>
+
+<span class="k">75%到達:</span> <span class="v">HANDOVER.md自動生成 → セッション終了推奨</span>
+<span class="k">90%到達:</span> <span class="v">作業一時停止 → ユーザーの指示を待つ</span>
+<span class="k">大タスク前:</span> <span class="v">未保存のフィードバック・進捗を自動保存</span></pre>
+    </div>
+      </div>
+    </details>
+
+    <details>
+      <summary><span class="pulse-dot"></span>
+        <div>
+          自作Skills一覧 — 9種類+MCP連携
+          <div class="summary-sub">deepdive、industry-report、x-research、company-research 他。全て実務で稼働中</div>
+        </div>
+      <span class="open-label">OPEN</span></summary>
+      <div class="details-body">
+    <div class="skill-grid" style="margin-top:4px;">
+      <div class="skill-item">
+        <h5>deepdive</h5>
+        <p>タスクをWeb検索+YouTube字幕で徹底調査し、HTMLレポートを自動生成・配信</p>
+      </div>
+      <div class="skill-item">
+        <h5>industry-report-html</h5>
+        <p>業界別退職理由レポートを1コマンドで生成。12業界分を構築済み</p>
+      </div>
+      <div class="skill-item">
+        <h5>x-research</h5>
+        <p>Grok APIでX投稿をリアルタイム検索。海外のClaude Code最新情報も自動収集</p>
+      </div>
+      <div class="skill-item">
+        <h5>company-research</h5>
+        <p>企業の市場価値向上ポテンシャルを分析。30-40件以上のWeb+YouTube調査</p>
+      </div>
+      <div class="skill-item">
+        <h5>legal-risk-card</h5>
+        <p>法的リスクのQ&A・解決策・弁護士質問スクリプトを自動生成</p>
+      </div>
+      <div class="skill-item">
+        <h5>youtube-transcript</h5>
+        <p>YouTube動画から字幕を抽出。リサーチの情報源として各スキルと連携</p>
+      </div>
+      <div class="skill-item">
+        <h5>frontend-design</h5>
+        <p>プロダクションレベルのUI/HTMLを生成。LP、ダッシュボード等</p>
+      </div>
+      <div class="skill-item">
+        <h5>copywriting</h5>
+        <p>行動科学を応用したマーケティングコピーの作成・編集</p>
+      </div>
+      <div class="skill-item">
+        <h5>Notion MCP連携</h5>
+        <p>NotionデータベースをClaude Codeから直接操作。ナレッジベースの自動化</p>
+      </div>
+    </div>
+
+      </div>
+    </details>
+
+    <div class="highlight">
+      <p>これらのSkillsとCLAUDE.mdの設計は、自分の環境だけで完結するものではありません。クライアント企業の業種・業務に合わせてカスタマイズしたCLAUDE.md/Skillsテンプレートを設計し、「導入して終わり」ではなく「定着して業務が変わる」状態まで伴走する。これがコンサルとして提供する価値です。</p>
+    </div>
+  </div>
+
+
+  <!-- ===== 8. CONDITIONS ===== -->
+  <div class="section" id="sec-conditions">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2 class="section-title">稼働条件</h2>
+    </div>
+
+    <div class="conditions-grid">
+      <div class="condition-item">
+        <h5>開始時期</h5>
+        <p>即日対応可能。ご相談次第で柔軟に調整します</p>
+      </div>
+      <div class="condition-item">
+        <h5>稼働日数</h5>
+        <p>週3日のオフィス出社（浜松町）に対応可能。プロジェクト状況に応じて柔軟に</p>
+      </div>
+      <div class="condition-item">
+        <h5>雇用形態</h5>
+        <p>業務委託を希望。報酬は成果に応じた形で柔軟にご相談させてください。前職の株式売却により当面の金銭的余裕があるため、報酬よりも機会を重視しています</p>
+      </div>
+      <div class="condition-item">
+        <h5>兼業について</h5>
+        <p>自身の人材紹介業（マイクロ法人）と並行。Claude Codeで業務を自動化済みのため、十分な稼働時間を確保可能</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== 9. QUESTIONS ===== -->
+  <div class="section" id="sec-questions">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2 class="section-title">面談でお聞きしたいこと</h2>
+    </div>
+
+    <div class="card blue">
+      <ul>
+        <li>現在のClaude Codeコンサル事業で、クライアント企業の業種構成はどのようになっていますか？</li>
+        <li>コンサルタント1人あたりの担当社数の目安と、1社あたりの支援期間のイメージを教えてください</li>
+        <li>「日本一のClaude Codeコンサル部隊」に向けて、今最も課題に感じていることは何ですか？</li>
+      </ul>
+    </div>
+  </div>
+
+
+
+  <!-- ===== CLOSING ===== -->
+  <div class="closing">
+    <h3>人材紹介業界の中から来た、<br>Claude Codeを使い倒している経営者。<br>お力になれると確信しています。</h3>
+    <p>
+      業務委託でのご相談を希望しております。<br>
+      報酬は成果に応じた形で、<strong>柔軟にご相談させてください。</strong><br><br>
+      カジュアル面談の機会をいただけますと幸いです。
+    </p>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<div class="footer">
+  Claude Code Consultant Portfolio &mdash; 2026.03
+  <div class="footer-note">本ポートフォリオはClaude Codeで作成しています</div>
+</div>
+
+<script>
+(function(){
+  // Sidebar scroll-spy
+  var sections=document.querySelectorAll('.section[id]');
+  var sbLinks=document.querySelectorAll('.sb-link');
+  function updateSidebar(){
+    var scrollY=window.scrollY||document.documentElement.scrollTop;
+    var current='';
+    sections.forEach(function(s){
+      if(s.offsetTop-120<=scrollY) current=s.id;
+    });
+    sbLinks.forEach(function(l){
+      l.classList.remove('active');
+      if(l.getAttribute('href')==='#'+current) l.classList.add('active');
+    });
+  }
+  addEventListener('scroll',updateSidebar,{passive:true});
+  updateSidebar();
+
+  const canvas=document.getElementById('bg-canvas');const ctx=canvas.getContext('2d');let w,h,lines=[];const LC=18;
+  function initLines(){lines=[];for(let i=0;i<LC;i++){const pts=[];const n=4+Math.floor(Math.random()*3);for(let j=0;j<n;j++)pts.push({x:(j/(n-1))*w*1.4-w*.2,baseY:Math.random()*h});lines.push({pts,opacity:.15+Math.random()*.2,width:.8+Math.random()*1.2});}}
+  function resize(){w=canvas.width=innerWidth;h=canvas.height=innerHeight;initLines();}
+  addEventListener('resize',resize);resize();
+  const blobs=[{x:.7,y:.3,r:.45,c:[235,136,104]},{x:.3,y:.7,r:.5,c:[52,183,223]},{x:.5,y:.2,r:.35,c:[52,183,223]},{x:.8,y:.8,r:.3,c:[235,136,104]}];
+  let t=0,scrollSpeed=0,lastScroll=0;
+  addEventListener('scroll',function(){var st=window.scrollY||document.documentElement.scrollTop;scrollSpeed=Math.min(Math.abs(st-lastScroll)*0.002,0.015);lastScroll=st;},{passive:true});
+  function draw(){t+=.003+scrollSpeed;scrollSpeed*=.95;ctx.fillStyle='rgb(233,233,233)';ctx.fillRect(0,0,w,h);
+    for(let b=0;b<blobs.length;b++){const bl=blobs[b];const bx=w*(bl.x+Math.sin(t*.4+b*2.1)*.08);const by=h*(bl.y+Math.cos(t*.3+b*1.7)*.06);const br=Math.max(w,h)*bl.r;const g=ctx.createRadialGradient(bx,by,0,bx,by,br);g.addColorStop(0,`rgba(${bl.c},0.06)`);g.addColorStop(.6,`rgba(${bl.c},0.02)`);g.addColorStop(1,`rgba(${bl.c},0)`);ctx.fillStyle=g;ctx.fillRect(0,0,w,h);}
+    for(let i=0;i<lines.length;i++){const L=lines[i],pts=L.pts;ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].baseY+Math.sin(t*.5+i*1.7)*40);for(let j=1;j<pts.length-1;j++){const yj=pts[j].baseY+Math.sin(t*(.5+j*.2)+i*1.7)*40;const yn=pts[j+1].baseY+Math.sin(t*(.5+(j+1)*.2)+i*1.7)*40;ctx.quadraticCurveTo(pts[j].x,yj,(pts[j].x+pts[j+1].x)/2,(yj+yn)/2);}const last=pts[pts.length-1];ctx.lineTo(last.x,last.baseY+Math.sin(t*(.5+(pts.length-1)*.2)+i*1.7)*40);ctx.strokeStyle=`rgba(255,255,255,${L.opacity})`;ctx.lineWidth=L.width;ctx.stroke();}
+    requestAnimationFrame(draw);}
+  draw();
+})();
+</script>
+
+</body>
+</html>
