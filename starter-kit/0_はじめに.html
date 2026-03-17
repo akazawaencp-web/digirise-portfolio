@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code スターターキット — はじめに</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #ea8768;
+  --sky: #33b6de;
+  --text: #1a1a2e;
+  --text-sub: #6b7280;
+  --bg: #f5f5f7;
+  --font: 'BIZ UDPGothic', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.8; min-height: 100vh; }
+
+/* Background */
+.bg-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18; animation: drift 20s ease-in-out infinite alternate; }
+.blob-1 { width: 500px; height: 500px; background: var(--coral); top: -150px; left: -100px; }
+.blob-2 { width: 400px; height: 400px; background: var(--sky); bottom: -100px; right: -80px; animation-delay: -10s; }
+@keyframes drift { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 30px) scale(1.08); } }
+
+/* Layout */
+.container { position: relative; z-index: 2; max-width: 680px; margin: 0 auto; padding: 60px 24px 80px; }
+
+/* Hero */
+.hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 20px; padding: 44px 36px; margin-bottom: 36px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; width: 300px; height: 200px; border-radius: 50%; background: radial-gradient(ellipse, rgba(234,135,104,0.2) 0%, transparent 70%); bottom: -100px; left: -40px; }
+.hero::after { content: ''; position: absolute; width: 350px; height: 250px; border-radius: 50%; background: radial-gradient(ellipse, rgba(51,182,222,0.18) 0%, transparent 70%); top: -120px; right: -30px; }
+.hero-content { position: relative; z-index: 1; }
+.hero h1 { font-size: 24px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.hero h1 .coral { color: var(--coral); }
+.hero h1 .sky { color: var(--sky); }
+.hero-sub { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.7; }
+
+/* Intro text */
+.intro { font-size: 14px; color: var(--text-sub); line-height: 1.9; margin-bottom: 32px; }
+
+/* Step cards */
+.step-card { display: flex; gap: 20px; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.04); border-radius: 16px; padding: 28px; margin-bottom: 20px; text-decoration: none; color: inherit; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer; }
+.step-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+
+.step-num { flex-shrink: 0; width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: #fff; }
+.step-num.coral { background: linear-gradient(135deg, var(--coral), #d4775a); }
+.step-num.sky { background: linear-gradient(135deg, var(--sky), #2a9abd); }
+.step-num.green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+
+.step-info { flex: 1; }
+.step-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 2px; }
+.step-label.coral { color: var(--coral); }
+.step-label.sky { color: var(--sky); }
+.step-label.green { color: #16a34a; }
+.step-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+.step-desc { font-size: 13px; color: var(--text-sub); line-height: 1.7; }
+.step-time { display: inline-block; font-size: 11px; color: var(--text-sub); background: rgba(0,0,0,0.04); border-radius: 6px; padding: 2px 8px; margin-top: 6px; }
+
+/* Arrow */
+.arrow { text-align: center; margin: -6px 0 14px; }
+.arrow svg { width: 20px; height: 20px; opacity: 0.2; }
+
+/* Footer */
+.footer { text-align: center; font-size: 11px; color: var(--text-sub); margin-top: 40px; opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+</div>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-content">
+      <h1><span class="coral">Claude Code</span> スターターキット</h1>
+      <div class="hero-sub">あなたに合ったルートを選んで、順番に進めてください。</div>
+    </div>
+  </div>
+
+  <div class="intro">
+    このキットは、Claude Code（AI開発アシスタント）を<strong>使いこなせるようになる</strong>ためのガイド一式です。<br>
+    まずSTEP 1を読んでから、あなたの状況に合ったルートに進んでください。
+  </div>
+
+  <!-- STEP 1: 共通 -->
+  <a class="step-card" href="1_Claude Codeで何が変わるか.html">
+    <div class="step-num coral">1</div>
+    <div class="step-info">
+      <div class="step-label coral">STEP 1 — まず読む（全員共通）</div>
+      <div class="step-title">Claude Codeで何が変わるのか？</div>
+      <div class="step-desc">
+        Claude Codeを「使える人」と「使えない人」の間にある決定的な違いを解説しています。<br>
+        なぜこのツールを学ぶ価値があるのか、最初に全体像を掴んでください。
+      </div>
+      <div class="step-time">所要時間: 約10分（読むだけ）</div>
+    </div>
+  </a>
+
+  <div class="arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+
+  <!-- 分岐 -->
+  <div style="background:rgba(255,255,255,0.7);border-radius:14px;padding:20px 24px;margin-bottom:20px;text-align:center;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;">STEP 1を読み終わったら、あなたに合うルートを選んでください</div>
+    <div style="font-size:12px;color:var(--text-sub);">どちらか片方だけ進めればOKです</div>
+  </div>
+
+  <!-- ルートA/B 左右2カラム -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+
+    <!-- 左: ルートA -->
+    <div>
+      <a href="2_セットアップガイド.html" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg,rgba(51,182,222,0.06),rgba(255,255,255,0.9));border:2px solid rgba(51,182,222,0.25);border-radius:16px;padding:24px 20px;text-align:center;transition:box-shadow 0.2s,transform 0.2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(51,182,222,0.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+        <div style="font-size:11px;font-weight:700;color:var(--sky);letter-spacing:0.06em;margin-bottom:6px;">ROUTE A</div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--sky),#2a9abd);color:#fff;font-size:18px;font-weight:700;margin-bottom:10px;">2</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">はじめてClaude Codeを使う</div>
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-bottom:8px;">まだインストールしていない方はこちら</div>
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.6;">インストール、料金プランの設定、<br>ターミナルの導入まで全て案内します</div>
+        <div style="display:inline-block;font-size:11px;color:var(--text-sub);background:rgba(0,0,0,0.04);border-radius:6px;padding:2px 8px;margin-top:10px;">所要時間: 約30〜60分</div>
+      </a>
+    </div>
+
+    <!-- 右: ルートB -->
+    <div>
+      <a href="2b_設定の引き継ぎ（既存ユーザー向け）.html" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg,rgba(234,135,104,0.06),rgba(255,255,255,0.9));border:2px solid rgba(234,135,104,0.25);border-radius:16px;padding:24px 20px;text-align:center;transition:box-shadow 0.2s,transform 0.2s;" onmouseover="this.style.boxShadow='0 4px 20px rgba(234,135,104,0.15)';this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
+        <div style="font-size:11px;font-weight:700;color:var(--coral);letter-spacing:0.06em;margin-bottom:6px;">ROUTE B</div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--coral),#d4775a);color:#fff;font-size:18px;font-weight:700;margin-bottom:10px;">2</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:6px;">既にClaude Codeを使っている</div>
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.6;margin-bottom:8px;">RIOの設定・スキルを引き継ぎたい方</div>
+        <div style="font-size:12px;color:var(--text-sub);line-height:1.6;">既存の設定はそのまま。<br>スキルや安全ルールを追加します</div>
+        <div style="display:inline-block;font-size:11px;color:var(--text-sub);background:rgba(0,0,0,0.04);border-radius:6px;padding:2px 8px;margin-top:10px;">所要時間: 約10分</div>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4v12m0 0l-4-4m4 4l4-4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></div>
+
+  <!-- STEP 3: 共通 -->
+  <div style="font-size:11px;font-weight:700;color:#16a34a;letter-spacing:0.06em;margin-bottom:8px;padding-left:4px;">ROUTE A / B 共通</div>
+  <a class="step-card" href="3_裏方A君を作る.html" style="border-left:3px solid var(--success);">
+    <div class="step-num green">3</div>
+    <div class="step-info">
+      <div class="step-label green">STEP 3 — 実践</div>
+      <div class="step-title">裏方A君（LINE自動調査AI）を作る</div>
+      <div class="step-desc">
+        セットアップが終わったら、実際にClaude Codeを使ってLINE Botを作ります。<br>
+        LINEに話しかけるだけでタスク管理・自動調査をしてくれる「裏方A君」の構築ガイドです。
+      </div>
+      <div class="step-time">所要時間: 約3〜5時間（Part 1〜6）</div>
+    </div>
+  </a>
+
+  <div class="footer">
+    Claude Code Starter Kit — by RIO
+  </div>
+
+</div>
+
+</body>
+</html>

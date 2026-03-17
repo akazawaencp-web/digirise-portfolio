@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>裏方A君 開発ガイド — ゼロから作るLINE自動調査AI</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #ea8768;
+  --sky: #33b6de;
+  --text: #1a1a2e;
+  --text-sub: #6b7280;
+  --text-light: #9ca3af;
+  --bg: #f5f5f7;
+  --success: #22c55e;
+  --warn: #f59e0b;
+  --error: #ef4444;
+  --font: 'BIZ UDPGothic', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.8; font-feature-settings: "palt"; letter-spacing: 0.02em; overflow-x: hidden; }
+
+/* Canvas Background */
+#bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+.grain { position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; mix-blend-mode: multiply; }
+
+/* Layout */
+.container { position: relative; z-index: 2; max-width: 780px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* Hero */
+.hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 20px; padding: 48px 36px; margin-bottom: 32px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; width: 350px; height: 250px; border-radius: 50%; background: radial-gradient(ellipse, rgba(234,135,104,0.2) 0%, transparent 70%); bottom: -120px; left: -60px; }
+.hero::after { content: ''; position: absolute; width: 400px; height: 280px; border-radius: 50%; background: radial-gradient(ellipse, rgba(51,182,222,0.18) 0%, transparent 70%); top: -140px; right: -40px; }
+.hero-content { position: relative; z-index: 1; }
+.hero h1 { font-size: 26px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.hero h1 .coral { color: var(--coral); }
+.hero h1 .sky { color: var(--sky); }
+.hero-sub { font-size: 13px; color: rgba(255,255,255,0.55); line-height: 1.7; }
+
+/* Warning */
+.warning-box { background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02)); border: 1px solid rgba(239,68,68,0.2); border-left: 4px solid var(--error); border-radius: 12px; padding: 20px 24px; margin-bottom: 28px; }
+.warning-box .label { font-size: 12px; font-weight: 700; color: var(--error); margin-bottom: 6px; }
+.warning-box p { font-size: 13px; color: var(--text); line-height: 1.7; }
+
+/* Card */
+.card { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.03); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+.card-coral { border-left: 4px solid var(--coral); }
+.card-sky { border-left: 4px solid var(--sky); }
+.card-green { border-left: 4px solid var(--success); }
+.card-warn { border-left: 4px solid var(--warn); }
+.card-error { border-left: 4px solid var(--error); }
+
+/* Section Header */
+.sec-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.sec-label.coral { color: var(--coral); }
+.sec-label.sky { color: var(--sky); }
+.sec-label.green { color: var(--success); }
+.sec-label.warn { color: var(--warn); }
+.sec-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.sec-desc { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
+
+/* Part Header */
+.part-header { background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; margin-top: 40px; }
+.part-num { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: var(--coral); margin-bottom: 4px; }
+.part-title { font-size: 20px; font-weight: 700; color: #fff; }
+.part-time { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+
+/* Step */
+.step { background: rgba(255,255,255,0.5); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; margin-right: 8px; }
+.step-num.coral { background: var(--coral); }
+.step-num.sky { background: var(--sky); }
+.step-head { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; font-weight: 700; }
+.step-body { font-size: 13px; color: var(--text-sub); line-height: 1.8; padding-left: 32px; }
+
+/* Code */
+.code { background: #1e1e2e; border-radius: 10px; padding: 14px 18px; margin: 10px 0; overflow-x: auto; position: relative; }
+.code code { font-family: var(--mono); font-size: 12.5px; color: #cdd6f4; line-height: 1.6; white-space: pre; display: block; }
+.code .comment { color: #6c7086; }
+.code .keyword { color: #cba6f7; }
+.code .string { color: #a6e3a1; }
+.copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); font-size: 10px; padding: 2px 8px; border-radius: 5px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+.copy-btn:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+/* Alert */
+.alert { border-radius: 10px; padding: 14px 18px; margin: 12px 0; font-size: 13px; line-height: 1.7; }
+.alert-info { background: rgba(51,182,222,0.06); border-left: 3px solid var(--sky); }
+.alert-warn { background: rgba(245,158,11,0.06); border-left: 3px solid var(--warn); }
+.alert-success { background: rgba(34,197,94,0.06); border-left: 3px solid var(--success); }
+.alert-error { background: rgba(239,68,68,0.06); border-left: 3px solid var(--error); }
+.alert .al { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 4px; }
+.alert-info .al { color: var(--sky); }
+.alert-warn .al { color: #92400e; }
+.alert-success .al { color: #059669; }
+.alert-error .al { color: var(--error); }
+
+/* Architecture Diagram */
+.arch { background: #0f172a; border-radius: 14px; padding: 24px; margin: 16px 0; overflow-x: auto; }
+.arch pre { font-family: var(--mono); font-size: 11.5px; color: #94a3b8; line-height: 1.5; white-space: pre; }
+.arch .hl-coral { color: var(--coral); font-weight: 700; }
+.arch .hl-sky { color: var(--sky); font-weight: 700; }
+.arch .hl-green { color: var(--success); }
+.arch .hl-white { color: #e2e8f0; font-weight: 700; }
+
+/* Table */
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+.tbl th { background: rgba(51,182,222,0.06); padding: 8px 10px; text-align: left; font-weight: 700; border-bottom: 2px solid rgba(0,0,0,0.08); font-size: 11px; }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid rgba(0,0,0,0.04); line-height: 1.6; }
+.tbl tr:hover td { background: rgba(51,182,222,0.02); }
+
+/* Checklist */
+.checklist { list-style: none; padding: 0; }
+.checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.checklist li:last-child { border-bottom: none; }
+.chk { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; font-size: 11px; font-weight: 700; }
+.chk-coral { background: rgba(234,135,104,0.1); color: var(--coral); }
+.chk-sky { background: rgba(51,182,222,0.1); color: var(--sky); }
+.chk-green { background: rgba(34,197,94,0.1); color: var(--success); }
+
+/* Toggle */
+.toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sky); cursor: pointer; margin-top: 10px; user-select: none; }
+.toggle:hover { color: var(--coral); }
+.toggle .chev { font-size: 10px; transition: transform 0.2s; }
+.toggle.open .chev { transform: rotate(90deg); }
+.detail { display: none; margin-top: 8px; padding: 14px 16px; background: rgba(51,182,222,0.03); border-radius: 10px; font-size: 12px; line-height: 1.8; color: var(--text-sub); }
+.detail.show { display: block; }
+
+/* Connector */
+.connector { width: 2px; height: 14px; background: linear-gradient(to bottom, rgba(234,135,104,0.2), rgba(51,182,222,0.1)); margin: 0 auto; }
+
+/* Reveal Animation */
+.reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s, transform 0.6s; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Feature Grid */
+.feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.feat-item { background: rgba(255,255,255,0.5); border-radius: 10px; padding: 14px 16px; }
+.feat-label { font-size: 11px; font-weight: 700; color: var(--coral); margin-bottom: 2px; }
+.feat-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.feat-desc { font-size: 11px; color: var(--text-sub); line-height: 1.6; }
+
+/* Tooltip for technical terms */
+.term { position: relative; border-bottom: 1px dashed var(--sky); cursor: help; color: var(--text); }
+.term::after { content: attr(data-tip); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1e1e2e; color: #cdd6f4; font-size: 11px; line-height: 1.6; padding: 8px 12px; border-radius: 8px; white-space: normal; width: 260px; pointer-events: none; opacity: 0; transition: opacity 0.2s; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: 400; }
+.term:hover::after { opacity: 1; }
+
+/* Footer */
+.footer { text-align: center; padding: 40px 0 0; font-size: 11px; color: var(--text-light); }
+
+@media (max-width: 640px) {
+  .container { padding: 24px 16px 60px; }
+  .hero { padding: 32px 24px; }
+  .feat-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="grain"></div>
+
+<div class="container">
+
+<!-- Hero -->
+<div class="hero reveal">
+  <div class="hero-content">
+    <h1><span class="coral">裏方A君</span> 開発ガイド</h1>
+    <h1 style="font-size:16px;margin-top:4px;"><span class="sky">ゼロから作る</span>LINE自動調査AIシステム</h1>
+    <div class="hero-sub" style="margin-top:12px;">
+      LINEに話しかけるだけでタスクを記録し、AIが自動で調査してHTMLレポートを届けてくれる。<br>
+      そんなシステムを、Claude Codeと一緒にゼロから作るためのガイドです。
+    </div>
+  </div>
+</div>
+
+<!-- Warning -->
+<div class="warning-box reveal">
+  <div class="label">CONFIDENTIAL</div>
+  <p><strong>このガイドの内容は機密情報です。</strong><br>RIOが構築した独自のシステム設計・スキル・ノウハウを含みます。外部への公開・共有・転載は禁止です。スクリーンショットの撮影やURLの共有もしないでください。</p>
+</div>
+
+<!-- 困った時の心構え -->
+<div class="card card-sky reveal" style="border-left:4px solid var(--sky);background:rgba(51,182,222,0.04);">
+  <div class="sec-label sky">MOST IMPORTANT</div>
+  <div class="sec-title">このガイドを進める上で一番大事なこと</div>
+  <div class="sec-desc" style="font-size:14px;line-height:2;">
+    このプロジェクトを通して、わからないことがあったら<strong>どんどんClaude Codeに質問してください</strong>。<br><br>
+    エラーが出た、画面の意味がわからない、次に何をすればいいかわからない — 全部、Claude Codeに聞けば大丈夫です。<br><br>
+    特に有効なのが、<strong>スクリーンショットを撮ってClaude Codeに貼り付ける</strong>方法です。「この画面のここがわからない」と画像を添えて聞くだけで、的確に教えてくれます。<br><br>
+    <strong style="color:var(--coral);font-size:15px;">「自分で調べて解決しよう」という癖をなくしてください。</strong><br><br>
+    Google検索で30分悩むよりも、Claude Codeに聞けば10秒で答えが返ってきます。AI時代の新しい仕事の仕方は「自力で頑張る」ではなく「AIに正しく頼る」です。遠慮なく、何度でも聞いてください。
+  </div>
+</div>
+
+<!-- What is 裏方A君 -->
+<div class="card card-coral reveal">
+  <div class="sec-label coral">OVERVIEW</div>
+  <div class="sec-title">裏方A君とは</div>
+  <div class="sec-desc">
+    「超有能な裏方Aくん」は、LINE上で動くAIアシスタントです。<br><br>
+    LINEに音声入力やテキストで思いついたことを送ると、それがタスクとして自動登録されます。登録されたタスクはAIが定期的に「やった？」と催促（チェイス）してくれます。さらに、調査が必要なタスクには自動で深掘り調査（DeepDive）を行い、結果をHTMLレポートにしてLINEに届けてくれます。
+  </div>
+
+  <div class="feat-grid" style="margin-top:16px;">
+    <div class="feat-item">
+      <div class="feat-label">CORE</div>
+      <div class="feat-name">タスク登録</div>
+      <div class="feat-desc">LINEに送るだけでAIがジャンル・タイプ・期限を自動分類</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-label">CHASE</div>
+      <div class="feat-name">チェイス通知</div>
+      <div class="feat-desc">朝・昼・夜にストイックなトレーナーキャラが催促</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-label">DEEPDIVE</div>
+      <div class="feat-name">自動調査</div>
+      <div class="feat-desc">Web検索+YouTube字幕取得で徹底調査→HTMLレポート</div>
+    </div>
+    <div class="feat-item">
+      <div class="feat-label">DASHBOARD</div>
+      <div class="feat-name">ダッシュボード</div>
+      <div class="feat-desc">タスクの全体像をブラウザで一覧管理</div>
+    </div>
+  </div>
+</div>
+
+<!-- Architecture -->
+<div class="card card-sky reveal">
+  <div class="sec-label sky">ARCHITECTURE</div>
+  <div class="sec-title">全体のしくみ</div>
+  <div class="sec-desc">裏方A君は、以下の4つの要素が連携して動いています。</div>
+
+  <div class="arch">
+<pre>
+<span class="hl-white">あなたのiPhone (LINE)</span>
+        |
+        | メッセージ送信
+        v
+<span class="hl-coral">┌─────────────────────────────────────────┐</span>
+<span class="hl-coral">│  Railway サーバー (FastAPI)              │</span>
+<span class="hl-coral">│                                         │</span>
+<span class="hl-coral">│  ・LINE Webhook 受信                    │</span>
+<span class="hl-coral">│  ・タスク登録 / 管理                     │</span>
+<span class="hl-coral">│  ・チェイス通知（朝・昼・夜）            │</span>
+<span class="hl-coral">│  ・HTMLレポート配信                      │</span>
+<span class="hl-coral">│  ・ダッシュボード                        │</span>
+<span class="hl-coral">└─────────────────────────────────────────┘</span>
+        |                          |
+        | API呼び出し              | HTMLアップロード
+        v                          ^
+<span class="hl-sky">┌──────────────────┐</span>    <span class="hl-green">┌──────────────────┐</span>
+<span class="hl-sky">│  Claude API      │</span>    <span class="hl-green">│  あなたのMac     │</span>
+<span class="hl-sky">│  (Sonnet/Haiku)  │</span>    <span class="hl-green">│                  │</span>
+<span class="hl-sky">│                  │</span>    <span class="hl-green">│  Claude Code     │</span>
+<span class="hl-sky">│  ・タスク解析    │</span>    <span class="hl-green">│  + deepdiveスキル│</span>
+<span class="hl-sky">│  ・チェイス文生成│</span>    <span class="hl-green">│  (自動実行)      │</span>
+<span class="hl-sky">└──────────────────┘</span>    <span class="hl-green">└──────────────────┘</span>
+</pre>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:12px;">
+    <div class="al">ポイント</div>
+    <strong>サーバー（Railway）</strong>はインターネット上で24時間動き続ける部分。LINEからのメッセージを受け取り、定期通知を送る。<br>
+    <strong>Mac側（Claude Code）</strong>はMacが起きている間だけ動く部分。1時間ごとに未処理タスクを調査してHTMLレポートを作り、サーバーにアップロードする。
+  </div>
+</div>
+
+<!-- Prerequisites -->
+<div class="card reveal">
+  <div class="sec-label coral">BEFORE YOU START</div>
+  <div class="sec-title">開発を始める前に必要なもの</div>
+  <table class="tbl">
+    <tr><th>項目</th><th>説明</th><th>費用</th></tr>
+    <tr><td><strong>Claude Code</strong></td><td>このガイドの主役。コードは全てClaude Codeが書いてくれる</td><td>サブスク（Pro $20/月〜）</td></tr>
+    <tr><td><strong>LINE Developers</strong></td><td>LINE Botを作るための開発者アカウント</td><td>無料</td></tr>
+    <tr><td><strong>Railway</strong></td><td>サーバーを動かすクラウドサービス</td><td>実質無料（後述）</td></tr>
+    <tr><td><strong>GitHub</strong></td><td>コードを保存・管理する場所。Railwayとの連携に必要</td><td>無料</td></tr>
+    <tr><td><strong>Anthropic API</strong></td><td>Claude AIの頭脳部分。タスク解析やチェイス文生成に使う</td><td>月数百円程度（後述）</td></tr>
+  </table>
+
+  <div class="alert alert-success" style="margin-top:14px;">
+    <div class="al">費用について — 安心してください</div>
+    <strong>Railway</strong>: Hobbyプランは月$5ですが、$5分のクレジットが含まれているので、裏方A君のような軽いアプリなら<strong>$5以内に収まることがほとんど</strong>で、追加料金はかかりません。トライアル期間中（最初の30日）は完全無料です。<br><br>
+    <strong>Anthropic API（裏方A君のAI頭脳）</strong>: タスク解析やチェイス文の生成に使いますが、1回の処理はほんの数秒で済みます。Haikuモデル（一番安いモデル）を使えば<strong>月に数百円程度</strong>で収まります。上限も設定できるので、予想外の請求が来る心配はありません。<br><br>
+    <strong>Claude Code（開発ツール）</strong>: こちらはサブスクリプション（Pro $20/月〜）です。裏方A君の開発だけでなく、日常の作業全般に使えます。
+  </div>
+
+  <div class="alert alert-warn" style="margin-top:10px;">
+    <div class="al">Claude Codeのセットアップが先</div>
+    Claude Codeのインストール・APIキー設定がまだの場合は、先にセットアップガイドを完了してからこのガイドに進んでください。
+  </div>
+</div>
+
+<!-- ==================== PART 1 ==================== -->
+<div class="part-header reveal">
+  <div class="part-num">PART 1</div>
+  <div class="part-title">LINE Botを作る</div>
+  <div class="part-time">所要時間: 約30分</div>
+</div>
+
+<div class="card card-coral reveal">
+  <div class="sec-desc">まず「LINE公式アカウント」を作り、そこにMessaging APIを有効化してBotとして使えるようにします。</div>
+
+  <div class="alert alert-warn">
+    <div class="al">重要: 2024年9月以降の手順が変わっています</div>
+    以前はLINE Developers Consoleから直接Botを作れましたが、現在は以下の順序です：<br>
+    <strong>1. LINE公式アカウント作成 → 2. Messaging API有効化 → 3. トークン取得</strong><br>
+    また、2025年6月以降は<strong>ビジネスマネージャー</strong>との接続も必要になっています（無料で利用可）。
+  </div>
+
+  <div class="step" style="margin-top:14px;">
+    <div class="step-head"><span class="step-num coral">1</span>LINE公式アカウントを作成する</div>
+    <div class="step-body">
+      以下のURLにアクセスして、ビジネスID（LINE公式アカウント用のアカウント）を作ります。
+    </div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>https://account.line.biz/signup</code>
+    </div>
+    <ul class="checklist" style="margin-left:32px;margin-top:8px;">
+      <li><span class="chk chk-coral">1</span><span>上のURLを開き、<strong>「LINEアカウントでログイン」</strong>を選択（普段使っているLINEアカウントでOK）</span></li>
+      <li><span class="chk chk-coral">2</span><span>アカウント作成フォームが出るので、以下を入力：<br>
+        ・<strong>アカウント名</strong>: 「超有能な裏方Aくん」など好きな名前<br>
+        ・<strong>業種</strong>: 「個人」や「IT」など適当でOK<br>
+        ・<strong>メールアドレス</strong>: 連絡先メールアドレス</span></li>
+      <li><span class="chk chk-coral">3</span><span><strong>「確認」→「完了」</strong>で作成完了</span></li>
+    </ul>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">2</span>LINE Official Account Managerを開く</div>
+    <div class="step-body">作成したアカウントの管理画面を開きます。</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>https://manager.line.biz/</code>
+    </div>
+    <ul class="checklist" style="margin-left:32px;margin-top:8px;">
+      <li><span class="chk chk-coral">1</span><span>ログイン後、アカウント一覧からさっき作ったアカウントをクリック</span></li>
+      <li><span class="chk chk-coral">2</span><span>管理画面が開いたら、画面右上の<strong>「設定」</strong>（歯車アイコン）をクリック</span></li>
+    </ul>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">3</span>Messaging APIを有効化する</div>
+    <div class="step-body">設定画面の中でMessaging APIを有効にします。</div>
+    <ul class="checklist" style="margin-left:32px;">
+      <li><span class="chk chk-coral">1</span><span>左メニューから<strong>「Messaging API」</strong>をクリック</span></li>
+      <li><span class="chk chk-coral">2</span><span><strong>「Messaging APIを利用する」</strong>ボタンをクリック</span></li>
+      <li><span class="chk chk-coral">3</span><span>プロバイダーを選ぶ画面が出る → <strong>「プロバイダーを作成」</strong>を選んで、好きな名前を入力（「自分の名前」や「マイプロジェクト」など。後から変更できないので注意）</span></li>
+      <li><span class="chk chk-coral">4</span><span>プライバシーポリシーURL → <strong>空欄のままでOK</strong></span></li>
+      <li><span class="chk chk-coral">5</span><span><strong>「OK」</strong>をクリックで有効化完了</span></li>
+    </ul>
+    <div class="alert alert-info" style="margin-left:32px;">
+      <div class="al">何が起きたか</div>
+      有効化すると、LINE Developers Consoleに「Messaging APIチャネル」が自動で作成されます。次のステップでそちらに移動してトークンを取得します。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">4</span>チャネルアクセストークンを取得する</div>
+    <div class="step-body">LINE Developers Consoleに移動して、Botの認証に必要なトークンを発行します。</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>https://developers.line.biz/console/</code>
+    </div>
+    <ul class="checklist" style="margin-left:32px;margin-top:8px;">
+      <li><span class="chk chk-coral">1</span><span>上のURLを開き、ログイン</span></li>
+      <li><span class="chk chk-coral">2</span><span>プロバイダー一覧からさっき作ったプロバイダーをクリック</span></li>
+      <li><span class="chk chk-coral">3</span><span>その中の<strong>Messaging APIチャネル</strong>をクリック</span></li>
+      <li><span class="chk chk-coral">4</span><span>上部のタブから<strong>「Messaging API設定」</strong>をクリック</span></li>
+      <li><span class="chk chk-coral">5</span><span>画面を一番下までスクロールし、<strong>「チャネルアクセストークン（長期）」</strong>を見つける</span></li>
+      <li><span class="chk chk-coral">6</span><span><strong>「発行」</strong>ボタンをクリック → 表示された長い文字列をコピーして、メモ帳等に保存</span></li>
+    </ul>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">5</span>チャネルシークレットを確認する</div>
+    <div class="step-body">同じLINE Developers Consoleの画面で確認します。</div>
+    <ul class="checklist" style="margin-left:32px;">
+      <li><span class="chk chk-coral">1</span><span>上部タブの<strong>「チャネル基本設定」</strong>をクリック</span></li>
+      <li><span class="chk chk-coral">2</span><span><strong>「チャネルシークレット」</strong>欄に表示されている値をコピーして保存</span></li>
+    </ul>
+    <div class="alert alert-error" style="margin-left:32px;">
+      <div class="al">セキュリティ注意</div>
+      チャネルアクセストークンとチャネルシークレットは<strong>絶対にClaude Codeのチャットに貼らないでください</strong>。後のステップで.envファイルに自分の手で直接設定します。今はメモ帳等にだけ保存しておいてください。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">6</span>応答設定を変更する</div>
+    <div class="step-body">LINE Official Account Managerに戻って、デフォルトの自動応答を無効にします。</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>https://manager.line.biz/</code>
+    </div>
+    <ul class="checklist" style="margin-left:32px;margin-top:8px;">
+      <li><span class="chk chk-coral">1</span><span>アカウントを選択 → 画面右上の<strong>「設定」</strong></span></li>
+      <li><span class="chk chk-coral">2</span><span>左メニューの<strong>「応答設定」</strong>をクリック</span></li>
+      <li><span class="chk chk-coral">3</span><span><strong>「応答メッセージ」</strong>→ <strong>オフ</strong>にする（デフォルトの「友だち追加ありがとう」的な自動返信を無効化）</span></li>
+      <li><span class="chk chk-coral">4</span><span><strong>「Webhook」</strong>→ <strong>オン</strong>にする（メッセージをサーバーに転送する設定）</span></li>
+    </ul>
+    <div class="alert alert-info" style="margin-left:32px;">
+      <div class="al">Webhook URLはまだ空欄でOK</div>
+      Webhook URLは次のPart（サーバー構築後）で設定します。今はオンにしておくだけで大丈夫です。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">7</span>自分をBotの友だちに追加する</div>
+    <div class="step-body">
+      LINE Developers Console → Messaging API設定タブの上部にQRコードがあります。<br>
+      スマホのLINEでこのQRコードを読み取って、Botを友だち追加してください。<br>
+      これで自分のLINEにBotが表示されるようになります（まだ返事はしません）。
+    </div>
+  </div>
+
+  <div class="alert alert-success">
+    <div class="al">Part 1 完了</div>
+    LINE Botの箱ができました。次のPartでこのBotに「頭脳」を与えます。<br>
+    メモ帳に保存した「チャネルアクセストークン」と「チャネルシークレット」は次のPartで使います。
+  </div>
+</div>
+
+<!-- ==================== PART 2 ==================== -->
+<div class="part-header reveal">
+  <div class="part-num">PART 2</div>
+  <div class="part-title">サーバーを構築する（Railway + FastAPI）</div>
+  <div class="part-time">所要時間: 約90分（最も時間がかかるパート）</div>
+</div>
+
+<div class="card card-sky reveal">
+  <div class="sec-desc">ここが一番大変なパートですが、<strong>コードは全てClaude Codeが書いてくれます</strong>。あなたがやることは「Claude Codeに指示を出す」「エラーが出たらClaude Codeに貼り付ける」だけです。<br><br><span style="font-size:12px;color:var(--sky);">用語のヒント: 下線付きの単語にカーソルを合わせると説明が表示されます。</span></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">1</span>GitHubアカウントを作り、リポジトリを作る</div>
+    <div class="step-body">
+      GitHub（ギットハブ）はコードを保存・管理するサービスです。Railwayと連携するために必要です。
+    </div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>https://github.com/signup</code>
+    </div>
+    <ul class="checklist" style="margin-left:32px;margin-top:8px;">
+      <li><span class="chk chk-sky">1</span><span>上のURLを開き、メールアドレス・パスワード・ユーザー名を設定してアカウント作成（無料プランでOK）</span></li>
+      <li><span class="chk chk-sky">2</span><span>ログイン後、画面右上の<strong>「+」アイコン</strong> → <strong>「New repository」</strong>をクリック</span></li>
+      <li><span class="chk chk-sky">3</span><span><strong>Repository name</strong>に <code style="font-family:var(--mono);font-size:12px;">task-chase</code> と入力</span></li>
+      <li><span class="chk chk-sky">4</span><span><strong>Private</strong>（非公開）を選択 — コードを他の人に見られないようにするため</span></li>
+      <li><span class="chk chk-sky">5</span><span><strong>「Create repository」</strong>ボタンをクリック</span></li>
+    </ul>
+    <div class="toggle" style="margin-left:32px;" onclick="toggleDetail(this)"><span class="chev">&#9654;</span> GitHubとは何か、なぜ必要か</div>
+    <div class="detail" style="margin-left:32px;">
+      GitHubは「コードの保管庫」のようなものです。あなたのMacで書いたコードをGitHubにアップロード（push）すると、Railwayが自動でそれを読み取ってサーバーに反映してくれます。つまり<strong>「Mac → GitHub → Railway」という橋渡し</strong>の役割です。<br><br>
+      「リポジトリ」は「プロジェクト1個分の保管場所」のことです。裏方A君のコード一式がここに入ります。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">2</span>プロジェクトフォルダを作る</div>
+    <div class="step-body">cmuxで以下を実行してプロジェクトフォルダを作り、Claude Codeを起動します。</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>mkdir -p ~/Documents/Claude_Work/task-chase && cd ~/Documents/Claude_Work/task-chase && claude</code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">3</span>Claude Codeにプロジェクトの骨組みを作ってもらう</div>
+    <div class="step-body">Claude Codeが起動したら、以下のように指示します。</div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">LINE Botのサーバーをゼロから作りたいです。
+以下の仕様で作ってください：
+
+・Python + FastAPI
+・LINE Messaging API v3 でWebhookを受け取る
+・LINEに送られたテキストをClaude API（Sonnet）で解析して
+  タスクとしてJSONファイルに保存する
+・タスクにはジャンル、タイプ、期限を自動で付ける
+・環境変数は.envで管理
+・.claudeignoreと.gitignoreも作って
+・Railwayにデプロイする前提で</span></code>
+    </div>
+    <div class="alert alert-info" style="margin-left:32px;">
+      <div class="al">Claude Codeがやってくれること</div>
+      この指示だけで、Claude Codeが以下を全て自動で作ります：<br>
+      ・<span class="term" data-tip="プログラミング言語Pythonで書かれたファイル。main.pyがメインプログラム、他はそれぞれ役割ごとに分かれた部品です。中身はClaude Codeが全て書いてくれるので、読めなくても大丈夫です。">Pythonコード</span>（main.py, task_parser.py 等）<br>
+      ・<span class="term" data-tip="このプロジェクトで使うツール（部品）の一覧リスト。料理で言えば「材料リスト」。Railwayがこれを見て必要なツールを自動で揃えてくれます。">requirements.txt</span>（必要なライブラリ一覧）<br>
+      ・<span class="term" data-tip="Railway（サーバー）に「このプログラムをこう起動してね」と伝える設定ファイル。たった1行の短いファイルです。">Procfile</span>（<span class="term" data-tip="インターネット上でプログラムを24時間動かし続けてくれるサービス。月$5のプランに$5分のクレジットが含まれており、裏方A君のような軽いアプリなら実質無料で動かせます。">Railway</span>での起動設定）<br>
+      ・<span class="term" data-tip="APIキーやパスワード等の秘密の値を入れるためのテンプレート。「ここにあなたの値を入れてね」という見本です。実際の値は自分の手で入れます。">.env.example</span>（環境変数のテンプレート）<br>
+      ・<span class="term" data-tip="Claude CodeやGitHubに「このファイルは見ないで・送らないで」と伝える設定。APIキー等の秘密情報がうっかり外に出ないように守ってくれます。">.claudeignore / .gitignore</span>（セキュリティ設定）
+    </div>
+
+    <div style="margin-left:32px;margin-top:14px;background:rgba(234,135,104,0.04);border-radius:12px;padding:18px 20px;border:1px solid rgba(234,135,104,0.12);">
+      <div style="font-size:13px;font-weight:700;color:var(--coral);margin-bottom:8px;">RIOからひとこと</div>
+      <div style="font-size:13px;color:var(--text-sub);line-height:1.9;">
+        上のプロンプト（指示文）を見て「最初からこんな整理された指示は出せないよ」と思うかもしれません。安心してください。<strong>自分もいきなりこんな指示を出したわけではありません。</strong><br><br>
+        最初は「LINE Botを作りたい」くらいのざっくりした指示から始めて、Claude Codeと何回もやり取りを重ねながら、少しずつ形にしていきました。上のプロンプトは、その試行錯誤の結果としてまとまったものです。<br><br>
+        だから<strong>最初から完璧な指示を出そうとしなくていい</strong>です。まずは「LINE Botを作りたい」だけでもOK。Claude Codeが「どんな仕様にしますか？」と聞いてくるので、会話の中で仕様が固まっていきます。<br><br>
+        ただ、このガイドを通して経験してほしいのは、<strong>「問い（指示）の精度を上げる力」の重要性</strong>です。同じClaude Codeを使っていても、指示の出し方で結果は大きく変わります。「自分が本当に欲しいものは何か」を言語化する力 — これがAI時代の「ビジネス戦闘力」です。プログラミングの知識ではなく、<strong>この「問いの力」を磨くことが、今後ますます重要になります。</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">4</span><span class="term" data-tip="APIキーやパスワードなどの秘密の設定値をまとめて書いておくファイル。アプリが起動する時にここから値を読み取ります。">.envファイル</span>を設定する</div>
+    <div class="step-body">
+      Claude Codeが<span class="term" data-tip="「ここにあなたの値を入れてね」という見本ファイル。これをコピーして実際の値を書き込みます。">.env.example</span>を作ってくれるので、それをコピーして実際のAPIキー等を設定します。
+    </div>
+    <div class="alert alert-warn" style="margin-left:32px;">
+      <div class="al">重要: Claude Codeを使わずに、別のターミナルで実行してください</div>
+      この作業にはAPIキー（秘密の文字列）が含まれます。Claude Codeのチャット画面ではなく、<strong>cmuxで新しいタブを開いて（Cmd+T）</strong>、そこに以下のコマンドを<strong>1行ずつ</strong>貼り付けて実行してください。<br>
+      Claude Codeは閉じる必要はありません。別タブで作業するだけです。
+    </div>
+    <div class="step-body" style="margin-top:8px;"><strong>1行目</strong>: プロジェクトフォルダに移動する</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>cd ~/Documents/Claude_Work/task-chase</code>
+    </div>
+    <div class="step-body" style="margin-top:8px;"><strong>2行目</strong>: 見本ファイルをコピーして.envファイルを作る</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>cp .env.example .env</code>
+    </div>
+    <div class="step-body" style="margin-top:8px;"><strong>3行目</strong>: .envファイルを開いて編集する</div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>nano .env</code>
+    </div>
+    <div class="toggle" style="margin-left:32px;" onclick="toggleDetail(this)"><span class="chev">&#9654;</span> nanoエディタの使い方</div>
+    <div class="detail" style="margin-left:32px;">
+      <code style="font-family:var(--mono);">nano</code> はターミナル内で動くシンプルなテキストエディタです。<br>
+      ・矢印キーでカーソルを移動して、値を書き換えます<br>
+      ・書き換えが終わったら <strong>Ctrl+O</strong>（保存）→ <strong>Enter</strong>（確定）→ <strong>Ctrl+X</strong>（閉じる）<br>
+      ・間違えたら <strong>Ctrl+X</strong> → 「N」で保存せずに閉じてやり直せます
+    </div>
+    <div class="step-body" style="margin-top:8px;">設定する主な値：</div>
+    <table class="tbl" style="margin-left:32px;">
+      <tr><th>変数名</th><th>内容</th></tr>
+      <tr><td><code style="font-family:var(--mono);">LINE_CHANNEL_SECRET</code></td><td>Part 1で取得したチャネルシークレット</td></tr>
+      <tr><td><code style="font-family:var(--mono);">LINE_CHANNEL_ACCESS_TOKEN</code></td><td>Part 1で取得したチャネルアクセストークン</td></tr>
+      <tr><td><code style="font-family:var(--mono);">ANTHROPIC_API_KEY</code></td><td>Claude APIのキー</td></tr>
+    </table>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">5</span><span class="term" data-tip="「デプロイ」= プログラムをサーバーに置いて動かすこと。Railwayはそのサーバーを提供してくれるサービスです。">Railwayにデプロイする</span></div>
+    <div class="step-body">
+      まずRailwayのアカウントを作ります。GitHubアカウントで連携するのが一番簡単です。
+    </div>
+    <div class="code" style="margin-left:32px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>https://railway.com/</code>
+    </div>
+    <ul class="checklist" style="margin-left:32px;margin-top:8px;">
+      <li><span class="chk chk-sky">1</span><span>上のURLを開き、<strong>「Login」</strong> → <strong>「Login with GitHub」</strong>でサインアップ</span></li>
+      <li><span class="chk chk-sky">2</span><span>ダッシュボードが開いたら、<strong>「New Project」</strong>ボタンをクリック</span></li>
+      <li><span class="chk chk-sky">3</span><span><strong>「Deploy from GitHub Repo」</strong>を選択 → さっき作ったリポジトリ（task-chase）を選ぶ</span></li>
+      <li><span class="chk chk-sky">4</span><span>デプロイが始まる。完了するとURLが発行される（例: <code style="font-family:var(--mono);font-size:11px;">https://xxx.up.railway.app</code>）</span></li>
+      <li><span class="chk chk-sky">5</span><span>Railwayの管理画面で<strong>「Variables」タブ</strong>を開き、.envと同じ環境変数を設定する（LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, ANTHROPIC_API_KEY 等）</span></li>
+    </ul>
+    <div class="alert alert-success" style="margin-left:32px;">
+      <div class="al">Railwayの料金について</div>
+      最初の30日間は$5分のトライアルクレジットがあり<strong>完全無料</strong>です。<br>
+      トライアル後はHobbyプラン（月$5）に移行しますが、$5分の利用クレジットが含まれています。裏方A君のような軽いアプリは<strong>月$5以内に収まることがほとんど</strong>なので、追加料金はかからないと思ってOKです。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">6</span>LINE WebhookにURLを設定する</div>
+    <div class="step-body">
+      RailwayのURLが決まったら、LINE Developers ConsoleのWebhook URLに設定します。
+    </div>
+    <div class="code" style="margin-left:32px;">
+      <code><span class="comment"># Webhook URL の形式</span>
+https://あなたのRailwayURL.up.railway.app/webhook</code>
+    </div>
+    <div class="step-body" style="margin-top:8px;">「検証」ボタンを押して「成功」と出ればOKです。</div>
+  </div>
+
+  <div class="alert alert-success">
+    <div class="al">Part 2 完了</div>
+    LINEにメッセージを送ると、サーバーが受け取ってタスクとして登録してくれるようになりました。<br>
+    試しにLINEで「明日の会議の資料を準備する」と送ってみてください。
+  </div>
+
+  <div class="alert alert-warn">
+    <div class="al">エラーが出た場合</div>
+    エラーメッセージをそのままClaude Codeに貼り付けてください。約80%のエラーはClaude Codeが解決してくれます。<br>
+    「Railwayのログにこう出てるんだけど」と貼るだけでOKです。
+  </div>
+</div>
+
+<!-- ==================== PART 3 ==================== -->
+<div class="part-header reveal">
+  <div class="part-num">PART 3</div>
+  <div class="part-title">チェイス機能を追加する（定期催促通知）</div>
+  <div class="part-time">所要時間: 約30分</div>
+</div>
+
+<div class="card card-coral reveal">
+  <div class="sec-desc">登録されたタスクを定期的に「やった？」と催促する機能を追加します。ストイックなトレーナーキャラで通知が来るので、サボれません。</div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">1</span>Claude Codeにチェイス機能を作ってもらう</div>
+    <div class="step-body">Claude Codeに以下のように指示します。</div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">チェイス（催促通知）機能を追加してください。
+・朝8時、昼12時、夕方18時にLINE pushメッセージを送る
+・未完了のタスクからランダムに最大3件を選んで催促する
+・キャラクターは「ストイックなパーソナルトレーナー」風
+・催促文はClaude API（Haikuモデル。安いので）で毎回生成
+・APScheduler（時間指定で自動実行する仕組み）を使ってスケジューラーを実装して</span></code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">2</span>LINEコマンドを追加する</div>
+    <div class="step-body">LINEから使えるコマンドも追加してもらいます。</div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">LINEで以下のコマンドが使えるようにしてください：
+・「完了報告」→ 完了するタスクを選んで報告
+・「タスク一覧」→ 現在のタスク一覧を表示
+・「今日のタスク」→ 今日期限のタスクだけ表示
+・「今週のまとめ」→ 週間サマリー
+・「費用」→ 今月のAPI使用料を表示
+・「あとでやる」→ タスクを後回しにする
+・上記以外のテキスト → 全てタスクとして登録</span></code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">3</span>GitHubにpushしてRailwayに反映</div>
+    <div class="step-body">
+      Claude Codeに「GitHubにpushして」と言えば自動でやってくれます。Railwayは自動デプロイ設定にしておけば、pushするだけで反映されます。
+    </div>
+  </div>
+
+  <div class="alert alert-success">
+    <div class="al">Part 3 完了</div>
+    定期的に催促が来るようになりました。LINEで「完了報告」と送って、タスク管理を試してみてください。
+  </div>
+</div>
+
+<!-- ==================== PART 4 ==================== -->
+<div class="part-header reveal">
+  <div class="part-num">PART 4</div>
+  <div class="part-title">DeepDive機能を構築する（自動調査AI）</div>
+  <div class="part-time">所要時間: 約90分</div>
+</div>
+
+<div class="card card-sky reveal">
+  <div class="sec-desc">
+    ここが裏方A君の最大の目玉機能です。登録されたタスクの中で「調査が必要なもの」を自動で深掘りし、HTMLレポートにまとめてLINEに届けてくれます。<br><br>
+    <strong>サーバー側（Railway）</strong>と<strong>Mac側（Claude Code）</strong>の連携で動く仕組みです。
+  </div>
+
+  <div class="arch">
+<pre>
+<span class="hl-white">LINEでタスク登録</span>
+      |
+      v
+<span class="hl-coral">Railway: タスクDBに保存（deepdive_status: "pending"）</span>
+      |
+      | 1時間ごとにチェック
+      v
+<span class="hl-green">Mac (Claude Code ヘッドレスモード)</span>
+      |
+      | 1. Railwayから未処理タスクを取得
+      | 2. Web検索 + YouTube字幕取得で調査
+      | 3. HTMLレポートを生成
+      | 4. RailwayにHTMLをアップロード
+      | 5. LINEに通知を送る
+      v
+<span class="hl-sky">あなたのLINEにレポートURLが届く</span>
+</pre>
+  </div>
+
+  <div class="step" style="margin-top:16px;">
+    <div class="step-head"><span class="step-num sky">1</span>Railway側にDeepDive APIを追加する</div>
+    <div class="step-body">Claude Codeに以下を指示します。</div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">DeepDive用のAPIエンドポイントを追加してください：
+・GET /api/deepdive/tasks → 未処理タスク一覧を返す
+・POST /api/deepdive/upload → HTMLファイルをアップロード
+・POST /api/deepdive/skip → タスクをスキップ
+・POST /api/deepdive/notify → LINE通知を送る
+・POST /api/deepdive/check-request → 手動リクエスト確認
+・全てBearer認証（合言葉のような認証方式。DEEPDIVE_API_KEYで保護）で保護
+・HTMLは /reports/ パスで配信する
+・Railway Volume（サーバー再起動してもデータが消えない保存領域）を /data にマウントして永続化</span></code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">2</span>deepdiveスキルを作る</div>
+    <div class="alert alert-success" style="margin-left:32px;margin-bottom:10px;">
+      <div class="al">RIOからスキルを受け取っている場合</div>
+      RIOからdeepdiveスキル（SKILL.md）を渡されている場合は、このステップは不要です。渡されたファイルを <code style="font-family:var(--mono);font-size:12px;">~/.claude/skills/deepdive/</code> に配置するだけでOKです。<br>以下はゼロから自分で作る場合の手順です。
+    </div>
+    <div class="step-body">
+      Mac側で動くClaude Codeの<span class="term" data-tip="Claude Codeに「こういう手順でこの作業をやってね」と教え込む仕組み。SKILL.mdというファイルに手順を書いておくと、次からはその名前を呼ぶだけで自動実行してくれます。">「スキル」</span>を作ります。スキルとは、Claude Codeに特定の手順を教え込む仕組みです。
+    </div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">deepdiveスキルを作りたいです。以下の手順で動くスキルです：
+
+1. scripts/deepdive_client.py fetch で未処理タスク取得
+2. タスクのraw_inputを解析（URLがあればアクセスして内容取得）
+3. WebSearchで最低3回検索して関連情報を集める
+4. YouTube動画があれば字幕を取得
+5. 調査結果をHTMLレポートにまとめる
+6. scripts/deepdive_client.py upload でRailwayにアップロード
+7. scripts/deepdive_client.py notify でLINE通知
+
+SKILL.mdをスキルフォルダに作成してください。</span></code>
+    </div>
+    <div class="alert alert-info" style="margin-left:32px;">
+      <div class="al">スキルの保存場所</div>
+      <code style="font-family:var(--mono);font-size:12px;">~/.claude/skills/deepdive/SKILL.md</code> に保存されます。<br>
+      このファイルがあると、Claude Codeに「深掘りして」と言うだけでスキルが起動します。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">3</span>deepdive_client.pyを作る</div>
+    <div class="step-body">
+      Railway APIとやり取りするためのスクリプトです。Claude Codeに作ってもらいます。
+    </div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">deepdive_client.py を作ってください。
+サブコマンド方式で：
+  python3 deepdive_client.py fetch → 未処理タスク取得
+  python3 deepdive_client.py upload [task_id] [html_path] → アップロード
+  python3 deepdive_client.py skip [task_id] → スキップ
+  python3 deepdive_client.py notify [task_id] [message] → LINE通知
+  python3 deepdive_client.py check-request → 手動リクエスト確認
+環境変数: DEEPDIVE_API_URL, DEEPDIVE_API_KEY</span></code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">4</span>自動実行を設定する（launchd）</div>
+    <div class="step-body">
+      Macが起きている間、1時間ごとに自動でDeepDiveを実行するように設定します。<br>
+      macOSの<span class="term" data-tip="Macに組み込まれている「自動実行マネージャー」。指定した時間間隔でプログラムを自動的に起動してくれます。スマホのアラームのプログラム版のようなものです。">launchd（ランチディー）</span>という仕組みを使います。
+    </div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">auto-deepdive.shを作ってください。
+・1時間ごとに実行される
+・deepdive_client.py fetch で未処理タスクがあるか確認
+・あれば Claude Code をヘッドレスモード（-p で指示を渡す）で起動
+・Claude Code が deepdiveスキルを使って調査→アップロード→通知
+・launchdのplistファイルも作って</span></code>
+    </div>
+    <div class="toggle" onclick="toggleDetail(this)"><span class="chev">&#9654;</span> ヘッドレスモードとは</div>
+    <div class="detail">
+      通常のClaude Codeは対話型（あなたが打って、AIが返す）ですが、ヘッドレスモードは<strong>指示を渡すだけで自動実行</strong>させるモードです。<br><br>
+      <code style="font-family:var(--mono);font-size:12px;">claude -p "deepdiveスキルを実行して" --model sonnet</code><br><br>
+      これで人が操作しなくてもClaude Codeが自動で調査→レポート生成→アップロードまでやってくれます。
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">5</span>LINEから手動で深掘りを依頼できるようにする</div>
+    <div class="step-body">
+      自動実行とは別に、LINEで「深掘り」と送ったら即座に調査を開始するようにします。
+    </div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">LINEで「深掘り」と送った時に、最新の未処理タスクの
+deepdiveを即座に開始する機能を追加してください。
+・Railway側にリクエストフラグを立てるAPI追加
+・Mac側にdeepdive-watcher.sh（5分ごとにフラグ確認）を作成
+・フラグが立っていたらauto-deepdive.shを起動</span></code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="alert alert-warn">
+    <div class="al">重要: Macのスリープ防止について</div>
+    自動実行（auto-deepdive.sh / deepdive-watcher.sh）は<strong>Macが起きていて、Wi-Fiに繋がっている時だけ</strong>動きます。<br>
+    Macがスリープすると自動実行は止まってしまいます。<br><br>
+    <strong>対策: Amphetamine（アンフェタミン）</strong>というMac用の無料アプリを入れます。<br>
+    このアプリを使うと、Macを「寝かさない」状態に保てます。
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">6</span>Macのスリープを防止する（Amphetamine）</div>
+    <div class="step-body">
+      <strong>インストール:</strong><br>
+      Mac App Storeで「Amphetamine」と検索 → 無料でインストール<br><br>
+      <strong>設定:</strong><br>
+      1. インストールするとメニューバー（画面上部の右側）に錠剤型のアイコンが出る<br>
+      2. アイコンをクリック → 「Indefinitely」（無期限）を選ぶ<br>
+      3. これだけでMacがスリープしなくなる<br><br>
+      <strong>なぜ必要？</strong><br>
+      auto-deepdive.shは1時間ごと、deepdive-watcher.shは5分ごとに動いています。Macがスリープするとこれらが全部止まるため、タスクを登録しても深掘り調査が実行されません。<br>
+      Amphetamineを有効にしておけば、外出中でもMacが起きたままなので、自動調査が止まりません。<br><br>
+      <strong>注意点:</strong><br>
+      ・電源ケーブルは繋いでおくこと（バッテリーだけだと減りが早い）<br>
+      ・Wi-Fiが切れると通信できないので、安定したネット環境で<br>
+      ・外出時や寝る時も動かし続けたい場合はAmphetamineをオンにしたまま
+    </div>
+  </div>
+
+  <div class="alert alert-success">
+    <div class="al">Part 4 完了</div>
+    LINEにタスクを登録すると、1時間以内にAIが自動で調査してHTMLレポートを届けてくれるようになりました。LINEで「深掘り」と送ればすぐに調査開始もできます。<br>
+    Amphetamineでスリープを防止すれば、外出中でも自動調査が動き続けます。
+  </div>
+</div>
+
+<!-- ==================== PART 5 ==================== -->
+<div class="part-header reveal">
+  <div class="part-num">PART 5</div>
+  <div class="part-title">ダッシュボードを作る</div>
+  <div class="part-time">所要時間: 約45分</div>
+</div>
+
+<div class="card card-sky reveal">
+  <div class="sec-desc">
+    タスクの全体像を一覧で見るためのWebダッシュボードを作ります。ステータス管理（未確認→確認済み→実行中→完了）、DeepDiveレポートへのリンク、ジャンル別フィルタなどが使えます。
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">1</span>ダッシュボードの機能を作る</div>
+    <div class="step-body">まず、データを表示するための土台（API + 基本画面）を作ります。</div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">タスク管理用のダッシュボードを作ってください。
+・APIでタスク一覧、ステータス変更、再分類ができるように
+・ステータス: unconfirmed → confirmed → execute → done
+・ダッシュボードはHTMLで、APIから動的にデータを取得
+・ジャンル別フィルタ、ステータス別フィルタ
+・各タスクからDeepDiveレポートへのリンク
+・Bearer認証で保護</span></code>
+    </div>
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">2</span>デザインを自分好みに仕上げる</div>
+    <div class="step-body">
+      機能ができたら、次は見た目です。Claude Codeはデザインも得意なので、言葉で伝えるだけでかなり良いものを作ってくれます。<br><br>
+      <strong>やり方は2つ:</strong>
+    </div>
+  </div>
+
+  <div class="alert alert-info" style="margin-left:32px;">
+    <div class="al">方法A: 言葉で好みを伝える</div>
+    「かっこいい」「シンプルに」だけでも作ってくれますが、もう少し具体的に伝えるとグッと良くなります。
+  </div>
+  <div class="code" style="margin-left:32px;background:#1a1a2e;">
+    <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">ダッシュボードのデザインを改善してください。
+・テーマカラー: コーラル（#ea8768）とスカイブルー（#33b6de）
+・背景は真っ白じゃなくて、少しグレーがかった感じ
+・カードは角丸で、左辺に色付きのライン
+・フォントは見やすい日本語フォント
+・絵文字は使わないでテキストベースで
+・全体的にシンプルで洗練された感じ</span></code>
+  </div>
+
+  <div class="alert alert-info" style="margin-left:32px;">
+    <div class="al">方法B: 参考デザインを見せる（おすすめ）</div>
+    好きなWebサイトやアプリのスクショを貼って「こんな感じにして」と伝えるのが最も確実です。
+  </div>
+  <div class="code" style="margin-left:32px;background:#1a1a2e;">
+    <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">（スクリーンショットを貼り付けて）
+このデザインの雰囲気に近づけてほしい。
+特にカードのレイアウトと配色が好きです。</span></code>
+  </div>
+
+  <div class="toggle" onclick="toggleDetail(this)" style="margin-left:32px;"><span class="chev">&#9654;</span> RIOのダッシュボードはこうやって作った</div>
+  <div class="detail" style="margin-left:32px;">
+    RIOが実際にやったデザインの進め方を参考に紹介します。<br><br>
+    <strong>Step 1: まず10パターン出させた</strong><br>
+    「ダッシュボードのデザイン案を10パターン、HTMLで作って」と指示。全部ブラウザで見比べて、一番良かったパターンを選んだ。<br><br>
+    <strong>Step 2: 好みを具体的に伝えた</strong><br>
+    ・テーマカラーはコーラル × スカイブルー<br>
+    ・絵文字は使わない（テキストかCSSのドットで代替）<br>
+    ・背景はCanvasアニメーション（ゆっくり動く光の球）<br>
+    ・カードの背景に銀色っぽいシマー（光沢感）<br>
+    ・サイドバーは白系<br><br>
+    <strong>Step 3: カンバン方式を採用</strong><br>
+    タスクをドラッグ&ドロップでカラム間移動できるように。「未確認→確認済み→実行中→完了」のように、タスクの進行状況が一目で分かるレイアウトに。<br><br>
+    <strong>ポイント:</strong> 最初から完璧を目指さなくてOK。「ここをもっと○○にして」「この部分の色を変えて」と少しずつ調整していくのが一番効率的です。
+  </div>
+
+  <div class="connector"></div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">3</span>スマホでも見やすくする</div>
+    <div class="step-body">
+      ダッシュボードをスマホでも使いたい場合は、一言伝えるだけ。
+    </div>
+    <div class="code" style="margin-left:32px;background:#1a1a2e;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">ダッシュボードをスマホでも見やすくして。
+画面が狭い時はカンバンをタブ切り替えに変えて。</span></code>
+    </div>
+  </div>
+
+  <div class="alert alert-success">
+    <div class="al">Part 5 完了</div>
+    ブラウザでタスクの全体像を管理できるようになりました。デザインも自分好みにカスタマイズできます。
+  </div>
+</div>
+
+<!-- ==================== PART 6 ==================== -->
+<div class="part-header reveal">
+  <div class="part-num">PART 6</div>
+  <div class="part-title">運用と改善</div>
+  <div class="part-time">日常の運用フロー</div>
+</div>
+
+<div class="card card-green reveal">
+  <div class="sec-label green">DAILY FLOW</div>
+  <div class="sec-title">日常の使い方</div>
+
+  <table class="tbl">
+    <tr><th>タイミング</th><th>やること</th></tr>
+    <tr><td><strong>思いついた時</strong></td><td>LINEに音声入力でタスクを送る。それだけ。</td></tr>
+    <tr><td><strong>催促が来たら</strong></td><td>「完了報告」か無視。AIは怒らない（ちょっとだけ煽ってくる）</td></tr>
+    <tr><td><strong>朝</strong></td><td>DeepDiveレポートの通知が来ていないか確認</td></tr>
+    <tr><td><strong>空き時間</strong></td><td>DeepDiveレポートをLINEのリンクから読む</td></tr>
+    <tr><td><strong>週末</strong></td><td>ダッシュボードでタスク全体を見渡し、整理する</td></tr>
+  </table>
+</div>
+
+<div class="card card-warn reveal">
+  <div class="sec-label warn">TROUBLESHOOTING</div>
+  <div class="sec-title">よくあるトラブル</div>
+
+  <div class="step">
+    <div class="step-head" style="font-size:13px;">LINEに送ったのに反応がない</div>
+    <div class="step-body">Railwayのログを確認。「Railway管理画面 → Deployments → 最新のデプロイ → Logs」。エラーがあればClaude Codeに貼り付けて相談。</div>
+  </div>
+  <div class="step">
+    <div class="step-head" style="font-size:13px;">DeepDiveが実行されない</div>
+    <div class="step-body">Macがスリープしていないか確認。auto-deepdive.shのログを確認: <code style="font-family:var(--mono);font-size:11px;">cat ~/task-chase-system/scripts/auto-deepdive.log</code></div>
+  </div>
+  <div class="step">
+    <div class="step-head" style="font-size:13px;">Railway残高が減ってきた</div>
+    <div class="step-body">Railwayは従量課金。Usage画面で確認し、必要ならクレジットを追加。月$5程度が目安。</div>
+  </div>
+</div>
+
+<div class="card reveal">
+  <div class="sec-label coral">TIPS</div>
+  <div class="sec-title">改善のヒント</div>
+  <div class="sec-desc">基本形ができたら、Claude Codeに相談しながら自分好みにカスタマイズしていきましょう。</div>
+
+  <ul class="checklist" style="margin-top:12px;">
+    <li><span class="chk chk-coral">1</span><span><strong>キャラクター変更</strong> — チェイスのキャラをもっと優しくしたり、厳しくしたり。Claude Codeに「チェイスの口調を○○風に変えて」と言うだけ</span></li>
+    <li><span class="chk chk-coral">2</span><span><strong>リッチメニュー</strong> — LINEの下にボタンメニューを追加できる。「リッチメニューを作って」と指示するだけ</span></li>
+    <li><span class="chk chk-coral">3</span><span><strong>Google Tasks連携</strong> — Googleカレンダーと同期してタスクを表示する機能も追加可能</span></li>
+    <li><span class="chk chk-coral">4</span><span><strong>レポートのデザイン</strong> — DeepDiveレポートのHTMLデザインを自分好みに変更できる</span></li>
+    <li><span class="chk chk-coral">5</span><span><strong>チェイス頻度の調整</strong> — 催促の間隔やタイミングをClaude Codeに「チェイス間隔を○時間に変えて」と言うだけ</span></li>
+  </ul>
+</div>
+
+<!-- Final -->
+<div class="card card-sky reveal" style="text-align:center;padding:36px;">
+  <div style="font-size:24px;font-weight:700;margin-bottom:8px;">完成</div>
+  <div class="sec-desc" style="max-width:500px;margin:0 auto;">
+    全6パート、お疲れさまでした。<br>
+    あなた専用の「超有能な裏方Aくん」の完成です。<br><br>
+    LINEに話しかけるだけでタスク管理・自動調査まで、全て自動でやってくれます。<br><br>
+    困った時はClaude Codeに相談してください。大体のことは解決してくれます。
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="footer reveal">
+  裏方A君 開発ガイド — Created by RIO + Claude Code
+</div>
+
+</div><!-- /container -->
+
+<script>
+// Copy button
+function copyCode(btn) {
+  var code = btn.parentElement.querySelector('code');
+  navigator.clipboard.writeText(code.textContent).then(function() {
+    btn.textContent = 'copied!';
+    setTimeout(function() { btn.textContent = 'copy'; }, 1500);
+  });
+}
+
+// Toggle detail
+function toggleDetail(el) {
+  el.classList.toggle('open');
+  var detail = el.nextElementSibling;
+  detail.classList.toggle('show');
+}
+
+// Reveal on scroll
+var reveals = document.querySelectorAll('.reveal');
+function checkReveal() {
+  reveals.forEach(function(el) {
+    var top = el.getBoundingClientRect().top;
+    if (top < window.innerHeight - 60) el.classList.add('visible');
+  });
+}
+window.addEventListener('scroll', checkReveal);
+checkReveal();
+
+// Background canvas
+(function() {
+  var c = document.getElementById('bg-canvas');
+  var ctx = c.getContext('2d');
+  var w, h, blobs = [], lines = [];
+
+  function resize() {
+    w = c.width = window.innerWidth;
+    h = c.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Color blobs
+  var colors = [
+    { r: 234, g: 135, b: 104 },
+    { r: 51, g: 182, b: 222 },
+    { r: 139, g: 92, b: 246 }
+  ];
+  for (var i = 0; i < 3; i++) {
+    blobs.push({
+      x: Math.random() * w, y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 0.3, vy: (Math.random() - 0.5) * 0.3,
+      radius: 250 + Math.random() * 150,
+      color: colors[i]
+    });
+  }
+
+  // Flowing lines
+  for (var j = 0; j < 4; j++) {
+    lines.push({
+      points: [],
+      speed: 0.3 + Math.random() * 0.4,
+      offset: Math.random() * Math.PI * 2,
+      amplitude: 80 + Math.random() * 60,
+      yBase: h * (0.2 + j * 0.2)
+    });
+    for (var k = 0; k <= 100; k++) {
+      lines[j].points.push({ x: (k / 100) * w, y: 0 });
+    }
+  }
+
+  var time = 0;
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+
+    // Draw blobs
+    blobs.forEach(function(b) {
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < -200 || b.x > w + 200) b.vx *= -1;
+      if (b.y < -200 || b.y > h + 200) b.vy *= -1;
+      var g = ctx.createRadialGradient(b.x, b.y, 0, b.x, b.y, b.radius);
+      g.addColorStop(0, 'rgba(' + b.color.r + ',' + b.color.g + ',' + b.color.b + ',0.04)');
+      g.addColorStop(1, 'rgba(' + b.color.r + ',' + b.color.g + ',' + b.color.b + ',0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+
+    // Draw lines
+    lines.forEach(function(l) {
+      ctx.beginPath();
+      l.points.forEach(function(p, i) {
+        p.y = l.yBase + Math.sin(time * l.speed + i * 0.06 + l.offset) * l.amplitude;
+        if (i === 0) ctx.moveTo(p.x, p.y);
+        else ctx.lineTo(p.x, p.y);
+      });
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    time += 0.015;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code 設定の引き継ぎ — 既存ユーザー向け</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --coral: #ea8768;
+  --sky: #33b6de;
+  --text: #1a1a2e;
+  --text-sub: #6b7280;
+  --bg: #f5f5f7;
+  --success: #22c55e;
+  --warn: #f59e0b;
+  --error: #ef4444;
+  --font: 'BIZ UDPGothic', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.8; }
+
+.bg-wrap { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.18; animation: drift 20s ease-in-out infinite alternate; }
+.blob-1 { width: 500px; height: 500px; background: var(--coral); top: -150px; left: -100px; }
+.blob-2 { width: 400px; height: 400px; background: var(--sky); bottom: -100px; right: -80px; animation-delay: -10s; }
+@keyframes drift { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 30px) scale(1.08); } }
+
+.container { position: relative; z-index: 2; max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+
+.hero { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border-radius: 20px; padding: 40px 36px; margin-bottom: 32px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; width: 300px; height: 200px; border-radius: 50%; background: radial-gradient(ellipse, rgba(234,135,104,0.2) 0%, transparent 70%); bottom: -100px; left: -40px; }
+.hero::after { content: ''; position: absolute; width: 350px; height: 250px; border-radius: 50%; background: radial-gradient(ellipse, rgba(51,182,222,0.18) 0%, transparent 70%); top: -120px; right: -30px; }
+.hero-content { position: relative; z-index: 1; }
+.hero h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.hero h1 .sky { color: var(--sky); }
+.hero-sub { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.7; }
+
+.card { background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 2px 12px rgba(0,0,0,0.03); border-radius: 16px; padding: 28px; margin-bottom: 20px; }
+.card-coral { border-left: 4px solid var(--coral); }
+.card-sky { border-left: 4px solid var(--sky); }
+.card-green { border-left: 4px solid var(--success); }
+.card-warn { border-left: 4px solid var(--warn); }
+.card-error { border-left: 4px solid var(--error); }
+
+.sec-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 4px; }
+.sec-label.coral { color: var(--coral); }
+.sec-label.sky { color: var(--sky); }
+.sec-label.green { color: var(--success); }
+.sec-label.warn { color: var(--warn); }
+.sec-title { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.sec-desc { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
+
+.step { background: rgba(255,255,255,0.5); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 7px; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; margin-right: 8px; }
+.step-num.coral { background: var(--coral); }
+.step-num.sky { background: var(--sky); }
+.step-head { display: flex; align-items: center; margin-bottom: 8px; font-size: 14px; font-weight: 700; }
+.step-body { font-size: 13px; color: var(--text-sub); line-height: 1.8; padding-left: 32px; }
+
+.code { background: #1e1e2e; border-radius: 10px; padding: 14px 18px; margin: 10px 0; overflow-x: auto; }
+.code code { font-family: var(--mono); font-size: 12.5px; color: #cdd6f4; line-height: 1.6; white-space: pre; display: block; }
+.code .comment { color: #6c7086; }
+
+.alert { border-radius: 10px; padding: 14px 18px; margin: 12px 0; font-size: 13px; line-height: 1.7; }
+.alert-info { background: rgba(51,182,222,0.06); border-left: 3px solid var(--sky); }
+.alert-warn { background: rgba(245,158,11,0.06); border-left: 3px solid var(--warn); }
+.alert-success { background: rgba(34,197,94,0.06); border-left: 3px solid var(--success); }
+.alert-error { background: rgba(239,68,68,0.06); border-left: 3px solid var(--error); }
+.alert .al { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 4px; }
+.alert-info .al { color: var(--sky); }
+.alert-warn .al { color: #92400e; }
+.alert-success .al { color: #059669; }
+.alert-error .al { color: var(--error); }
+
+.connector { width: 2px; height: 20px; background: linear-gradient(to bottom, rgba(0,0,0,0.06), transparent); margin: 0 auto; }
+
+.footer { text-align: center; font-size: 11px; color: var(--text-sub); margin-top: 40px; opacity: 0.6; }
+</style>
+</head>
+<body>
+
+<div class="bg-wrap">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+</div>
+
+<div class="container">
+
+<div class="hero">
+  <div class="hero-content">
+    <h1><span class="sky">Claude Code</span> 設定の引き継ぎ</h1>
+    <div class="hero-sub">既にClaude Codeを使っている方向け。<br>RIOのスキル・設定をあなたのClaude Codeに追加します。</div>
+  </div>
+</div>
+
+<div class="card card-coral">
+  <div class="sec-label coral">OVERVIEW</div>
+  <div class="sec-title">何をするの？</div>
+  <div class="sec-desc">
+    RIOが作った便利な設定（スキル、安全ルール、自動機能など）を、あなたの既存のClaude Codeに<strong>追加</strong>します。<br>
+    今の設定は消えません。上書きではなく、足し算です。
+  </div>
+</div>
+
+<div class="alert alert-warn">
+  <div class="al">注意</div>
+  この作業はターミナル（Claude Codeの画面）で行います。<br>
+  不安な場合は、<strong>Claude Codeに「この引き継ぎガイドの通りに設定して」と言えばやってくれます。</strong>
+</div>
+
+<!-- STEP 1 -->
+<div class="card card-sky">
+  <div class="sec-label sky">STEP 1</div>
+  <div class="sec-title">このZIPの中にある設定ファイルを確認</div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">1</span>ZIPを解凍する</div>
+    <div class="step-body">
+      ダウンロードしたZIPをダブルクリックで解凍。<br>
+      「claude-starter-kit」というフォルダが出てきます。
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">2</span>隠しフォルダがあることを知っておく</div>
+    <div class="step-body">
+      フォルダの中に、Finderでは見えない <strong>.claude</strong> というフォルダが入っています。<br>
+      ここにスキルや設定が全部入っています。見えないけど、ちゃんとあります。
+    </div>
+  </div>
+
+  <div class="alert alert-info">
+    <div class="al">隠しフォルダの見方（気になる人だけ）</div>
+    Finderで <strong>Command + Shift + .</strong>（ドット）を押すと、隠しファイルが薄く表示されます。もう一度押すと元に戻ります。
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 2 -->
+<div class="card card-sky">
+  <div class="sec-label sky">STEP 2</div>
+  <div class="sec-title">Claude Codeに引き継ぎをお願いする</div>
+
+  <div class="sec-desc" style="margin-bottom:16px;">
+    一番簡単な方法は、<strong>Claude Code自身にやってもらうこと</strong>です。<br>
+    Claude Codeを開いて、以下をそのままコピペしてください。
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num sky">1</span>Claude Codeで以下を実行</div>
+    <div class="step-body">ターミナルでClaude Codeを起動し、以下を貼り付けてください。</div>
+    <div class="code" style="margin-left:32px;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">以下のフォルダにRIOからもらった設定一式があります。
+私の既存の設定を壊さないように、追加・マージしてください。
+
+場所: ~/Downloads/claude-starter-kit/.claude/
+
+やってほしいこと:
+1. スキル（skills/フォルダ内）を全て ~/.claude/skills/ にコピー
+2. CLAUDE.mdの内容を、私の既存の ~/.claude/CLAUDE.md に追記
+   （既にある内容は消さないで、末尾に追加）
+3. hooks/ と scripts/ を ~/.claude/ にコピー
+4. docs/ を ~/.claude/ にコピー
+5. 完了したら何を追加したか教えて</span></code>
+    </div>
+  </div>
+
+  <div class="alert alert-success">
+    <div class="al">ポイント</div>
+    Claude Codeはファイル操作が得意なので、「壊さないでね」と伝えれば安全にやってくれます。<br>
+    万が一心配なら「作業前にバックアップを取って」と一言添えましょう。
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- STEP 3 -->
+<div class="card card-green">
+  <div class="sec-label green">STEP 3</div>
+  <div class="sec-title">確認する</div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">1</span>スキルが入ったか確認</div>
+    <div class="step-body">
+      Claude Codeに以下を聞いてみてください。
+    </div>
+    <div class="code" style="margin-left:32px;">
+      <code><span style="color:rgba(255,255,255,0.4);">あなた ></span> <span style="color:#cdd6f4;">今使えるスキルの一覧を教えて</span></code>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head"><span class="step-num coral">2</span>追加されたスキルの例</div>
+    <div class="step-body">
+      以下のようなスキルが使えるようになっていればOKです。<br><br>
+      ・<strong>company-research</strong> — 企業調査レポートを自動生成<br>
+      ・<strong>deepdive</strong> — タスクの深掘り調査<br>
+      ・<strong>industry-report-html</strong> — 業界レポートをHTMLに変換<br>
+      ・<strong>x-research</strong> — X（Twitter）でリアルタイム情報を検索<br>
+      ・<strong>copywriting</strong> — マーケティングコピーを作成<br>
+      ・その他多数
+    </div>
+  </div>
+</div>
+
+<div class="connector"></div>
+
+<!-- 手動でやりたい人向け -->
+<div class="card card-warn">
+  <div class="sec-label warn">OPTIONAL</div>
+  <div class="sec-title">自分でやりたい場合（上級者向け）</div>
+  <div class="sec-desc" style="margin-bottom:12px;">Claude Codeに任せず自分でやりたい場合のコマンドです。</div>
+
+  <div class="code">
+    <code><span class="comment"># 1. スキルをコピー（既存は上書きしない）</span>
+cp -rn ~/Downloads/claude-starter-kit/.claude/skills/* ~/.claude/skills/
+
+<span class="comment"># 2. CLAUDE.mdを追記</span>
+cat ~/Downloads/claude-starter-kit/.claude/CLAUDE.md >> ~/.claude/CLAUDE.md
+
+<span class="comment"># 3. フック・スクリプト・docsをコピー</span>
+cp -rn ~/Downloads/claude-starter-kit/.claude/hooks/* ~/.claude/hooks/
+cp -rn ~/Downloads/claude-starter-kit/.claude/scripts/* ~/.claude/scripts/
+cp -rn ~/Downloads/claude-starter-kit/.claude/docs/* ~/.claude/docs/</code>
+  </div>
+
+  <div class="alert alert-warn">
+    <div class="al">注意</div>
+    ダウンロード先がDownloadsフォルダでない場合は、パスを自分の解凍先に置き換えてください。
+  </div>
+</div>
+
+<div class="card card-sky" style="text-align:center;padding:32px;">
+  <div style="font-size:20px;font-weight:700;margin-bottom:8px;">引き継ぎ完了</div>
+  <div class="sec-desc" style="max-width:480px;margin:0 auto;">
+    これでRIOのスキルと設定が使えるようになりました。<br>
+    次は <a href="3_裏方A君を作る.html" style="color:var(--sky);font-weight:700;">3_裏方A君を作る</a> に進みましょう。
+  </div>
+</div>
+
+<div class="footer">
+  Claude Code Starter Kit — by RIO
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,1881 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code セットアップガイド</title>
+<link href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --font: 'BIZ UDPGothic', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+  --text: #1a1a2e;
+  --text-sub: #64748b;
+  --accent: #eb805e;
+  --blue: #2563eb;
+  --cyan: #33b6de;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: transparent; color: var(--text); line-height: 1.7; font-feature-settings: "palt"; letter-spacing: 0.02em; overflow-x: hidden; }
+
+/* Canvas Background */
+#line-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+.grain { position: fixed; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E"); pointer-events: none; z-index: 9999; mix-blend-mode: multiply; }
+@media print { #line-canvas, .grain { display: none !important; } }
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; position: relative; z-index: 2; }
+
+/* Sidebar */
+.sidebar { position: sticky; top: 0; width: 220px; height: 100vh; background: rgba(255,255,255,0.75); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-right: 1px solid rgba(0,0,0,0.05); z-index: 50; overflow-y: auto; padding: 24px 16px; flex-shrink: 0; }
+.sb-title { font-size: 13px; font-weight: 700; color: var(--accent); letter-spacing: 0.06em; margin-bottom: 20px; }
+.sb-label { font-size: 10px; font-weight: 700; color: var(--text-sub); letter-spacing: 0.08em; text-transform: uppercase; margin: 16px 0 6px; }
+.sb-label:first-child { margin-top: 0; }
+.sb-link { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 8px; font-size: 12px; color: var(--text-sub); text-decoration: none; transition: all 0.15s; }
+.sb-link:hover { background: rgba(37,99,235,0.06); color: var(--text); }
+.sb-link.active { background: rgba(37,99,235,0.08); color: var(--blue); font-weight: 700; }
+.sb-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+/* Main */
+.main { flex: 1; max-width: 800px; margin: 0 auto; padding: 48px 40px 80px; }
+
+/* Hero */
+.hero { background: #070b16; border-radius: 20px; padding: 48px 40px; margin-bottom: 40px; position: relative; overflow: hidden; }
+.hero::before { content: ''; position: absolute; width: 400px; height: 300px; border-radius: 50%; background: radial-gradient(ellipse, rgba(37,99,235,0.15) 0%, transparent 70%); bottom: -150px; left: -80px; }
+.hero::after { content: ''; position: absolute; width: 450px; height: 300px; border-radius: 50%; background: radial-gradient(ellipse, rgba(139,92,246,0.16) 0%, transparent 70%); top: -150px; right: -50px; }
+.hero-content { position: relative; z-index: 1; }
+.hero h1 { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.hero h1 span { background: linear-gradient(90deg, #93c5fd, #c4b5fd); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-sub { font-size: 14px; color: rgba(255,255,255,0.6); }
+
+/* Glass Card */
+.glass-card { background: rgba(255,255,255,0.88); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.9); box-shadow: 0 2px 16px rgba(0,0,0,0.03); border-radius: 16px; padding: 28px 28px; margin-bottom: 24px; }
+
+/* Section */
+.section-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.section-num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; background: var(--blue); color: #fff; font-size: 14px; font-weight: 700; flex-shrink: 0; }
+
+/* Step Card */
+.step-card { background: rgba(255,255,255,0.55); border-radius: 12px; padding: 20px; margin-bottom: 14px; }
+.step-label { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: 0.04em; margin-bottom: 6px; }
+.step-title { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+.step-desc { font-size: 13px; color: var(--text-sub); line-height: 1.8; }
+
+/* Code Block */
+.code-block { background: #1e1e2e; border-radius: 10px; padding: 16px 20px; margin: 10px 0; overflow-x: auto; position: relative; }
+.code-block code { font-family: var(--mono); font-size: 13px; color: #cdd6f4; line-height: 1.6; white-space: pre; }
+.code-label { position: absolute; top: 8px; right: 12px; font-size: 10px; color: rgba(255,255,255,0.3); font-family: var(--mono); }
+.copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); font-size: 11px; padding: 3px 10px; border-radius: 6px; cursor: pointer; font-family: var(--mono); transition: all 0.2s; }
+.copy-btn:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* Alert Box */
+.alert { border-radius: 10px; padding: 14px 18px; margin: 12px 0; font-size: 13px; line-height: 1.7; }
+.alert-warn { background: rgba(245,158,11,0.08); border-left: 3px solid #f59e0b; }
+.alert-info { background: rgba(37,99,235,0.06); border-left: 3px solid var(--blue); }
+.alert-success { background: rgba(5,150,105,0.06); border-left: 3px solid #059669; }
+.alert-label { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 4px; }
+.alert-warn .alert-label { color: #92400e; }
+.alert-info .alert-label { color: var(--blue); }
+.alert-success .alert-label { color: #059669; }
+
+/* List */
+.checklist { list-style: none; padding: 0; }
+.checklist li { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 13px; border-bottom: 1px solid rgba(0,0,0,0.04); }
+.checklist li:last-child { border-bottom: none; }
+.check-icon { width: 20px; height: 20px; border-radius: 50%; background: rgba(37,99,235,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; color: var(--blue); font-size: 11px; font-weight: 700; }
+
+/* Connector */
+.step-connector { width: 2px; height: 16px; background: linear-gradient(to bottom, rgba(37,99,235,0.15), rgba(37,99,235,0.05)); margin: 0 auto; }
+
+/* Reveal */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s, transform 0.7s; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* Skill Grid */
+.skill-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
+.skill-tag { background: rgba(255,255,255,0.6); border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; border: 1px solid rgba(0,0,0,0.04); transition: all 0.15s; }
+.skill-tag:hover { background: rgba(37,99,235,0.06); }
+.skill-name { color: var(--text); margin-bottom: 2px; }
+.skill-desc { color: var(--text-sub); font-weight: 400; font-size: 11px; }
+
+/* Rule Card */
+.rule-card { background: rgba(255,255,255,0.55); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; }
+.rule-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+.rule-badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 10px; border-radius: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; flex-shrink: 0; }
+.rule-badge.security { background: rgba(220,38,38,0.08); color: #dc2626; }
+.rule-badge.workflow { background: rgba(37,99,235,0.08); color: var(--blue); }
+.rule-badge.comm { background: rgba(5,150,105,0.08); color: #059669; }
+.rule-badge.quality { background: rgba(124,58,237,0.08); color: #7c3aed; }
+.rule-badge.memory { background: rgba(217,119,6,0.08); color: #d97706; }
+.rule-title { font-size: 14px; font-weight: 700; }
+.rule-what { font-size: 13px; color: var(--text-sub); line-height: 1.7; margin-bottom: 8px; }
+.rule-toggle { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 12px; border-radius: 6px; background: rgba(37,99,235,0.04); border: 1px solid rgba(37,99,235,0.08); font-size: 12px; font-weight: 600; color: var(--blue); transition: all 0.2s; width: fit-content; }
+.rule-toggle:hover { background: rgba(37,99,235,0.08); }
+.rule-toggle .chevron { display: inline-block; transition: transform 0.3s; font-size: 10px; }
+.rule-toggle.open .chevron { transform: rotate(90deg); }
+.rule-detail { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+.rule-detail.open { max-height: 3000px; }
+.rule-detail-inner { padding: 12px 0 4px; }
+.rule-story { background: rgba(245,158,11,0.06); border-radius: 8px; padding: 12px 16px; border-left: 3px solid #f59e0b; margin-bottom: 8px; }
+.rule-story-label { font-size: 11px; font-weight: 700; color: #92400e; letter-spacing: 0.04em; margin-bottom: 4px; }
+.rule-story-text { font-size: 13px; color: #78350f; line-height: 1.8; }
+.rule-ref { font-size: 11px; color: var(--text-sub); margin-top: 8px; }
+.rule-ref code { font-family: var(--mono); font-size: 11px; background: rgba(37,99,235,0.06); padding: 1px 5px; border-radius: 3px; }
+
+/* File Tree */
+.file-tree { font-family: var(--mono); font-size: 12px; color: var(--text-sub); line-height: 2; padding: 12px 0; }
+.file-tree .dir { color: var(--blue); font-weight: 600; }
+.file-tree .file { color: var(--text); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { padding: 24px 16px 60px; }
+  .hero { padding: 32px 24px; border-radius: 14px; }
+  .hero h1 { font-size: 22px; }
+  .glass-card { padding: 20px; }
+  .skill-grid { grid-template-columns: 1fr; }
+}
+
+/* Hamburger (mobile) */
+.hamburger { display: none; position: fixed; top: 16px; left: 16px; z-index: 100; width: 36px; height: 36px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border: 1px solid rgba(0,0,0,0.08); border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; }
+@media (max-width: 768px) { .hamburger { display: flex; } .sidebar.open { display: block; position: fixed; top: 0; left: 0; z-index: 99; height: 100vh; } }
+.hamburger span, .hamburger span::before, .hamburger span::after { display: block; width: 16px; height: 2px; background: var(--text); border-radius: 1px; position: relative; }
+.hamburger span::before, .hamburger span::after { content: ''; position: absolute; }
+.hamburger span::before { top: -5px; }
+.hamburger span::after { top: 5px; }
+</style>
+</head>
+<body>
+
+<canvas id="line-canvas"></canvas>
+<div class="grain"></div>
+
+<button class="hamburger" onclick="document.querySelector('.sidebar').classList.toggle('open')"><span></span></button>
+
+<div class="layout">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sb-title">Setup Guide</div>
+  <div class="sb-label">はじめに</div>
+  <a class="sb-link" href="#examples" data-section="examples"><span class="sb-dot" style="background:#059669;"></span>自動化の実例</a>
+  <div class="sb-label">準備</div>
+  <a class="sb-link" href="#install" data-section="install"><span class="sb-dot" style="background:var(--blue);"></span>インストール</a>
+  <a class="sb-link" href="#cmux" data-section="cmux"><span class="sb-dot" style="background:var(--blue);"></span>cmux（ターミナル）</a>
+  <a class="sb-link" href="#apikey" data-section="apikey"><span class="sb-dot" style="background:var(--blue);"></span>APIキー設定</a>
+  <div class="sb-label">スターターキット</div>
+  <a class="sb-link" href="#work-folder" data-section="work-folder"><span class="sb-dot" style="background:var(--accent);"></span>作業フォルダ作成</a>
+  <a class="sb-link" href="#copy-files" data-section="copy-files"><span class="sb-dot" style="background:var(--accent);"></span>ファイル配置</a>
+  <a class="sb-link" href="#whats-included" data-section="whats-included"><span class="sb-dot" style="background:var(--accent);"></span>中身の説明</a>
+  <div class="sb-label">設定ファイル解説</div>
+  <a class="sb-link" href="#claude-md" data-section="claude-md"><span class="sb-dot" style="background:#7c3aed;"></span>CLAUDE.md</a>
+  <a class="sb-link" href="#memory-md" data-section="memory-md"><span class="sb-dot" style="background:#d97706;"></span>MEMORY.md</a>
+  <div class="sb-label">使い方</div>
+  <a class="sb-link" href="#first-launch" data-section="first-launch"><span class="sb-dot" style="background:#059669;"></span>起動方法</a>
+  <a class="sb-link" href="#basic-usage" data-section="basic-usage"><span class="sb-dot" style="background:#059669;"></span>基本操作</a>
+  <a class="sb-link" href="#skills" data-section="skills"><span class="sb-dot" style="background:#059669;"></span>スキル一覧・探し方</a>
+  <div class="sb-label">安心ガイド</div>
+  <a class="sb-link" href="#safety" data-section="safety"><span class="sb-dot" style="background:#059669;"></span>壊れないから安心</a>
+  <a class="sb-link" href="#cost" data-section="cost"><span class="sb-dot" style="background:#d97706;"></span>料金の目安</a>
+  <a class="sb-link" href="#permission-mode" data-section="permission-mode"><span class="sb-dot" style="background:#7c3aed;"></span>自動承認モード</a>
+  <div class="sb-label">実践</div>
+  <a class="sb-link" href="#first-steps" data-section="first-steps"><span class="sb-dot" style="background:var(--blue);"></span>まずやってみよう</a>
+  <a class="sb-link" href="#approval-guide" data-section="approval-guide"><span class="sb-dot" style="background:#059669;"></span>承認の判断ガイド</a>
+  <div class="sb-label">注意事項</div>
+  <a class="sb-link" href="#security" data-section="security"><span class="sb-dot" style="background:#dc2626;"></span>セキュリティ</a>
+  <div class="sb-label">サポート</div>
+  <a class="sb-link" href="#troubleshooting" data-section="troubleshooting"><span class="sb-dot" style="background:var(--accent);"></span>トラブル対処</a>
+  <a class="sb-link" href="#support" data-section="support"><span class="sb-dot" style="background:var(--text-sub);"></span>困った時は</a>
+  <a class="sb-link" href="#tips" data-section="tips"><span class="sb-dot" style="background:var(--text-sub);"></span>便利なTips</a>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+
+<!-- Hero -->
+<section class="hero reveal">
+  <div class="hero-content">
+    <h1>Claude Code <span>セットアップガイド</span></h1>
+    <div class="hero-sub">SNS自動運用プロジェクト向け -- スキル・設定済みスターターキット</div>
+  </div>
+</section>
+
+<!-- About this kit -->
+<section class="glass-card reveal" style="border: 2px solid rgba(220,38,38,0.2); background: rgba(255,255,255,0.92);">
+  <div class="section-title" style="color:#dc2626;"><span class="section-num" style="background:#dc2626;">!</span> このスターターキットについて -- 必ず読んでください</div>
+
+  <div class="rule-card" style="background:rgba(220,38,38,0.04); border-left:3px solid #dc2626;">
+    <div class="rule-header">
+      <span class="rule-badge security">機密</span>
+      <span class="rule-title">外部への公開は絶対NGです</span>
+    </div>
+    <div class="rule-what" style="color:var(--text);">このスターターキットの中身（スキル、設定ファイル、スクリプト等）は<strong>社内の業務用資産</strong>です。<br>SNS、ブログ、GitHub、社外の人への共有など、外部への公開・転送は絶対にしないでください。</div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(37,99,235,0.08);color:var(--blue);">背景</span>
+      <span class="rule-title">なぜこのキットが特別なのか</span>
+    </div>
+    <div class="rule-what" style="color:var(--text); line-height:2;">
+      このスターターキットは、普通にClaude Codeをインストールしただけでは手に入らないものです。<br><br>
+
+      <strong>RIOが実際に何ヶ月もClaude Codeを使い込む中で、試行錯誤して作り上げた設定・スキル・ルール</strong>が全て入っています。具体的には：<br><br>
+
+      <strong>-- スキル17個 --</strong><br>
+      YouTube文字起こし、X検索、深掘り調査、企業リサーチ、HTMLレポート生成など。これらは全てRIOが業務で必要に迫られて1つずつ構築したもので、公開されているスキルではありません。<br><br>
+
+      <strong>-- 安全ルール --</strong><br>
+      「APIキーを会話に貼らない」「ファイルを勝手に消さない」「printenvを実行しない」等のルールは、RIOが実際にヒヤリハットを経験したり、リスクに気づいたりする中で1つずつ追加していったものです。<br><br>
+
+      <strong>-- ワークフローの仕組み --</strong><br>
+      セッション切れ対策（自動引き継ぎ書）、トークン監視、大タスク前の自動セーブなど。これらもRIOが「セッションが突然切れて作業内容が全部消えた」等の実体験から作った仕組みです。<br><br>
+
+      <strong>-- デザインシステム --</strong><br>
+      このガイドの背景（グラデーション＋白い曲線アニメーション）もそうですが、テーマカラー、カードデザイン、フォント選定等のデザインルールが組み込まれています。<br><br>
+
+      スキルの自作、セキュリティの自動化、セッション管理の仕組み化、デザインシステムの構築。これらをすべて実装済みの状態で、<strong>初日から使い始められます。</strong>大事に使ってください。
+    </div>
+  </div>
+</section>
+
+<!-- Real Examples -->
+<section id="examples" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#059669;">Ex</span> RIOがClaude Codeで自動化したこと</div>
+  <div class="step-desc" style="margin-bottom:16px;">「Claude Codeで何ができるのか？」のイメージを掴むために、RIOが実際にClaude Codeを使って自動化・構築してきたプロジェクトを紹介します。全て非エンジニアのRIOがClaude Codeに指示を出して作ったものです。</div>
+
+  <!-- SNS自動運用 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(5,150,105,0.08);color:#059669;">自動化</span>
+      <span class="rule-title">SNS 60アカウント運用の自動化</span>
+    </div>
+    <div class="rule-what">TikTok等のSNSアカウントを60個並列で運用するための仕組み。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> 詳しく見る</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">何を自動化したか</div>
+          <div class="rule-story-text">
+            <strong>Chapter 1 -- 戦略設計</strong><br>
+            アカウントのコンセプト設計 → ターゲット（ペルソナ）設定 → 悩み（Pain）の洗い出し → 強み（USP）の整理 → プロフィール文の生成。これを60アカウント分、Claude Codeに指示するだけで一気に作れるようにした。<br><br>
+            <strong>Chapter 2 -- 競合分析</strong><br>
+            競合アカウントの動画・静止画をAIで分析。何がバズっているか、成功パターンはどこにあるかを自動で抽出。<br><br>
+            <strong>Chapter 3 -- コンテンツ量産</strong><br>
+            企画案20本の自動生成 → 台本の自動作成 → 音声ナレーションの自動生成。手作業だと1本数時間かかる作業が、指示を出すだけで量産できるようになった。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- 企業リサーチ -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(5,150,105,0.08);color:#059669;">自動化</span>
+      <span class="rule-title">企業リサーチの自動化</span>
+    </div>
+    <div class="rule-what">企業名を伝えるだけで、30〜40件以上のWeb調査とYouTube動画の文字起こしを自動で行い、分析レポートを生成。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> 詳しく見る</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">何を自動化したか</div>
+          <div class="rule-story-text">
+            「○○株式会社について調べて」と伝えるだけで、以下を全自動で実行：<br><br>
+            1. Web記事を30〜40件自動検索・内容抽出<br>
+            2. YouTube動画を検索・文字起こし<br>
+            3. X（Twitter）の社員の声を収集<br>
+            4. 収集した情報を分析・整理<br>
+            5. HTMLの分析レポートを自動生成<br><br>
+            手作業で1社調べるのに半日〜1日かかっていた作業が、1回の指示で完了するようになった。スキル「/company-research」として組み込み済み。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- 業界レポート -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(5,150,105,0.08);color:#059669;">自動化</span>
+      <span class="rule-title">業界レポートの自動生成</span>
+    </div>
+    <div class="rule-what">業界名を指定するだけで、その業界の構造的な課題・トレンドを調査し、HTMLレポートを自動生成。12業界分を作成済み。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> 詳しく見る</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">何を自動化したか</div>
+          <div class="rule-story-text">
+            業界ごとに5カテゴリ（成長・やりがい・ワークライフバランス・年収・人間関係）で情報を整理し、サイドバー付き・アコーディオン付きの見やすいHTMLレポートを自動生成。<br><br>
+            このセットアップガイドの背景デザイン（グラデーション＋白い曲線）も、このレポートのために作ったデザインシステムが元になっている。<br><br>
+            Web検索とYouTube文字起こしを組み合わせた調査 → Markdown整理 → HTML変換まで一気通貫で自動化。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- CRM -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(5,150,105,0.08);color:#059669;">構築</span>
+      <span class="rule-title">業務管理システム（CRM）の構築</span>
+    </div>
+    <div class="rule-what">顧客管理・売上予測・アラート通知などの機能を持つWebアプリを、Claude Codeへの指示だけで構築。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> 詳しく見る</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">何を作ったか</div>
+          <div class="rule-story-text">
+            データベース設計、画面デザイン、機能実装まで全てClaude Codeに指示して構築。主な機能：<br><br>
+            ・売上予測ダッシュボード（ヨミ表）<br>
+            ・選考管理ページ（進捗の一覧・更新）<br>
+            ・アラートシステム（対応漏れを自動検知して通知）<br>
+            ・設定ページ（カスタマイズ可能）<br><br>
+            エンジニアに外注すれば数百万円かかるような規模のシステムを、Claude Codeとの対話だけで作り上げた。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- LINE Bot -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(5,150,105,0.08);color:#059669;">構築</span>
+      <span class="rule-title">LINEタスク管理AIボット</span>
+    </div>
+    <div class="rule-what">LINEにメッセージを送るだけでタスクを登録・管理できるAIボットを構築。Googleカレンダーとも連携。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> 詳しく見る</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">何を作ったか</div>
+          <div class="rule-story-text">
+            LINEで「明日14時に○○さんと面談」と送ると、AIが自動でタスクを登録し、Googleカレンダーにも予定を追加。期限が近づくとリマインド通知も送ってくれる。<br><br>
+            サーバーへのデプロイ（公開）もClaude Codeの指示で完了。LINEアプリから使えるので、外出先でもスマホからタスク管理ができる。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-success" style="margin-top:16px;">
+    <div class="alert-label">ポイント</div>
+    これらは全て、プログラミングの知識がない状態からClaude Codeへの指示だけで作ったものです。<br>
+    「何を作りたいか」を日本語で伝えれば、Claude Codeが設計・実装してくれます。<br>
+    あなたも同じように使えるので、まずは小さなことから試してみてください。
+  </div>
+</section>
+
+<!-- Step 1: Install -->
+<section id="install" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">1</span> Claude Codeをインストール</div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 1-1</div>
+    <div class="step-title">Node.jsを入れる</div>
+    <div class="step-desc">Claude Codeを動かすために必要な土台です。以下をターミナルに貼り付けて実行してください。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>brew install node</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>brew</strong> = Mac用のアプリインストーラー（Homebrew）<br><strong>install node</strong> = Node.jsというソフトをインストールする<br><br>Node.jsは「プログラムを動かすためのエンジン」です。Claude Codeはこのエンジンの上で動くので、先にNode.jsを入れる必要があります。インストール完了まで数分かかる場合があります。</div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-info">
+      <div class="alert-label">ターミナルの開き方</div>
+      Macで「command + スペース」→「ターミナル」と入力 → Enterで開きます
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 1-2</div>
+    <div class="step-title">Homebrewが入っていない場合</div>
+    <div class="step-desc">上のコマンドで「brew: command not found」と出たら、先にHomebrewを入れてください。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text">Homebrewは「Macのアプリストアのコマンド版」のようなものです。このコマンドはインターネットからHomebrewのインストーラーをダウンロードして実行します。途中でMacのパスワードを聞かれる場合があるので、入力してEnterを押してください（入力中は画面に何も表示されませんが、正常です）。</div>
+        </div>
+      </div>
+    </div>
+    <div class="step-desc" style="margin-top:8px;">完了したら、もう一度 <code style="font-family:var(--mono);background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;font-size:12px;">brew install node</code> を実行してください。</div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 1-3</div>
+    <div class="step-title">Claude Codeをインストール</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>npm install -g @anthropic-ai/claude-code</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>npm install -g</strong> = Node.jsのパッケージ管理ツールで、Macのどこからでも使えるようにインストール（-gは「グローバル」の意味）<br><strong>@anthropic-ai/claude-code</strong> = Anthropic社が公式に提供しているClaude Codeのパッケージ<br><br>これが完了すると、ターミナルで <code>claude</code> と打つだけでClaude Codeが起動するようになります。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Step 2: cmux -->
+<section id="cmux" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">2</span> ターミナル環境：cmuxをインストール</div>
+
+  <div class="step-desc" style="margin-bottom:16px;">
+    Claude Codeは標準のターミナルでも動きますが、<strong>cmux</strong>（シーマックス）というAI開発専用のターミナルアプリを使うと格段に快適になります。RIOも普段はcmuxからClaude Codeを使っています。
+  </div>
+
+  <div class="step-card">
+    <div class="step-label">cmuxの特徴</div>
+    <div class="step-title">なぜcmuxを使うのか</div>
+    <div class="step-desc">
+      <ul class="checklist">
+        <li><span class="check-icon">1</span><span><strong>通知リング</strong> — Claude Codeが返事を待っている時、タブが青く光ってお知らせしてくれる。複数のClaude Codeを同時に動かしても、どれが注意を必要としているか一目でわかる</span></li>
+        <li><span class="check-icon">2</span><span><strong>縦タブ + サイドバー</strong> — 左側にタブが並ぶので、複数プロジェクトを切り替えやすい。各タブにフォルダ名が自動表示される</span></li>
+        <li><span class="check-icon">3</span><span><strong>内蔵ブラウザ</strong> — Cmd+Shift+L で簡易ブラウザが開く。HTMLのプレビューに便利</span></li>
+        <li><span class="check-icon">4</span><span><strong>軽量・高速</strong> — macOSネイティブアプリなのでサクサク動く。無料で使える</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 2-1</div>
+    <div class="step-title">cmuxをインストール</div>
+    <div class="step-desc">以下の2つのコマンドを順番に実行してください。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>brew tap manaflow-ai/cmux</code>
+    </div>
+    <div class="step-desc" style="margin:8px 0;">1つ目が完了したら、次を実行：</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>brew install --cask cmux</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>brew tap</strong> = cmuxの配布元をHomebrewに登録する（「このお店も使いますよ」と教える感じ）<br><strong>brew install --cask</strong> = Macアプリとしてインストールする<br><br>完了すると、アプリケーションフォルダにcmuxが追加されます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 2-2</div>
+    <div class="step-title">cmuxを起動して確認</div>
+    <div class="step-desc">アプリケーションフォルダからcmuxを開くか、Spotlight（Cmd+スペース）で「cmux」と入力して起動してください。</div>
+    <div class="step-desc" style="margin-top:8px;"><strong>確認ポイント：</strong></div>
+    <ul class="checklist" style="margin-top:8px;">
+      <li><span class="check-icon">&#10003;</span><span><strong>Cmd+T</strong> で新しいタブが開き、左サイドバーにフォルダ名が表示される</span></li>
+      <li><span class="check-icon">&#10003;</span><span><strong>claude</strong> と入力してEnterを押すと、Claude Codeが起動し、タブに青いリングが表示される</span></li>
+      <li><span class="check-icon">&#10003;</span><span><strong>Cmd+Shift+L</strong> で内蔵ブラウザが開く</span></li>
+    </ul>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 2-3</div>
+    <div class="step-title">テーマを設定する（任意）</div>
+    <div class="step-desc">cmuxはGhosttyベースなので、見た目のカスタマイズができます。ライトテーマにしたい場合は、以下のファイルを作成してください。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>mkdir -p ~/.config/ghostty && cat > ~/.config/ghostty/config << 'EOF'
+# テーマ
+background = f5f5f5
+foreground = 2e3440
+
+# 半透明（デスクトップがうっすら透ける）
+background-opacity = 0.92
+
+# フォント
+font-size = 14
+
+# ウィンドウ余白
+window-padding-x = 12
+window-padding-y = 8
+window-theme = light
+EOF</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text">cmuxの見た目を設定するファイルを作成しています。明るい背景色（#f5f5f5）に暗い文字色（#2e3440）のライトテーマです。<br><br><strong>background-opacity = 0.92</strong> にすると、デスクトップの壁紙がうっすら透けて見えるおしゃれな見た目になります。<br><br>設定を変えたら <strong>Cmd+Q</strong> でcmuxを終了し、もう一度起動すると反映されます。</div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-info" style="margin-top:10px;">
+      <div class="alert-label">テーマ設定は後からでもOK</div>
+      まずはデフォルトのまま使い始めて、慣れてきたら好みに合わせてカスタマイズしてください。
+    </div>
+  </div>
+
+  <div class="alert alert-success" style="margin-top:12px;">
+    <div class="alert-label">以降のコマンドはcmuxで実行</div>
+    ここからの手順は、標準のターミナルではなく<strong>cmuxを開いて実行</strong>してください。cmuxの方が作業が快適です。
+  </div>
+</section>
+
+<!-- Step 3: API Key -->
+<section id="apikey" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">3</span> APIキーを設定</div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 4-1</div>
+    <div class="step-title">Anthropic ConsoleでAPIキーを取得</div>
+    <div class="step-desc">
+      ブラウザで Anthropic Console にアクセスし、APIキーを発行してください。<br>
+      APIキーは <code style="font-family:var(--mono);background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;font-size:12px;">sk-ant-...</code> で始まる文字列です。
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 4-2</div>
+    <div class="step-title">環境変数に設定する</div>
+    <div class="alert alert-warn" style="margin-bottom:12px;">
+      <div class="alert-label">重要: Claude Codeではなくターミナルで実行してください</div>
+      このコマンドにはAPIキーが含まれます。<strong>Claude Codeのチャットには絶対に貼らないでください。</strong><br>
+      必ず「ターミナル」アプリを別で開いて、そこに貼って実行してください。<br>
+      （Claude Codeのチャットに貼ると、キーがAnthropicのサーバーに送信されてしまいます）
+    </div>
+    <div class="step-desc"><strong>「ここにAPIキーを貼る」の部分を実際のキーに置き換えて</strong>、ターミナルに貼り付けてください。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>echo 'export ANTHROPIC_API_KEY="ここにAPIキーを貼る"' >> ~/.zshrc && source ~/.zshrc</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>echo '...' >> ~/.zshrc</strong> = Macの設定ファイル（.zshrc）にAPIキーの設定を1行追記します。.zshrcはターミナルを開くたびに自動で読み込まれるファイルです。<br><strong>source ~/.zshrc</strong> = 追記した設定を今すぐ反映します（通常は次にターミナルを開いた時に反映されますが、これで即座に使えるようになります）。<br><br>つまり「APIキーをMacに記憶させて、Claude Codeが自動でそのキーを使えるようにする」コマンドです。一度実行すれば、以降は毎回キーを入力する必要はありません。</div>
+        </div>
+      </div>
+    </div>
+    <div class="alert alert-warn">
+      <div class="alert-label">注意</div>
+      APIキーは絶対に他の人に見せない・チャットに貼らないでください。<br>
+      Claude Codeとの会話の中にもキーを貼らないでください。
+    </div>
+  </div>
+</section>
+
+<!-- Step 4: Work Folder -->
+<section id="work-folder" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">4</span> 作業フォルダを作る</div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 4-1</div>
+    <div class="step-title">Claude Code用のフォルダを「書類」の中に作る</div>
+    <div class="step-desc">Claude Codeは「今いるフォルダ」を作業場所として認識します。なので、まずClaude Code用の作業フォルダを1つ作っておきます。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>mkdir -p ~/Documents/Claude_Work</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>mkdir -p</strong> = フォルダを作るコマンド（-pは「途中のフォルダも含めて作る」の意味）<br><strong>~/Documents/Claude_Work</strong> = Finderで言うと「書類」フォルダの中に「Claude_Work」というフォルダを作る<br><br>このフォルダがClaude Codeの「ホームグラウンド」になります。今後、プロジェクトごとにこの中にサブフォルダを作っていきます。<br><br>Finderで見ると：書類 → Claude_Work という場所です。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 4-2</div>
+    <div class="step-title">このフォルダにCLAUDE.mdを作る</div>
+    <div class="step-desc">プロジェクトフォルダ専用のルールファイルを配置します。Claude Codeはこのフォルダで起動した時にこのファイルを読み込みます。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>cp ~/claude-starter-kit/.claude/CLAUDE.md ~/Documents/Claude_Work/CLAUDE.md</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> なぜ2箇所にCLAUDE.mdがあるのか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text">Claude Codeの設定ファイルには2つのレベルがあります：<br><br>
+            <strong>1. ~/.claude/CLAUDE.md（グローバル設定）</strong><br>
+            どのフォルダで起動しても常に読み込まれる。全プロジェクト共通のルール。<br>
+            → STEP 4でコピーするスターターキットに含まれています。<br><br>
+            <strong>2. プロジェクトフォルダ内のCLAUDE.md（プロジェクト設定）</strong><br>
+            そのフォルダで起動した時だけ読み込まれる。プロジェクト固有のルール。<br>
+            → このSTEPで配置するファイルです。<br><br>
+            Claude Codeは両方を読み込んで合算するので、グローバルの安全ルール＋プロジェクト固有のルールの両方が適用されます。<br><br>
+            今後、SNS自動運用プロジェクト固有のルールが増えたら、このプロジェクトフォルダ内のCLAUDE.mdに追記していきます。
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert alert-info" style="margin-top:12px;">
+    <div class="alert-label">フォルダの使い方</div>
+    今後Claude Codeを使う時は、このフォルダに移動してから起動します：<br>
+    <code style="font-family:var(--mono);font-size:12px;background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;">cd ~/Documents/Claude_Work && claude</code>
+  </div>
+</section>
+
+<!-- Step 5: Copy Files -->
+<section id="copy-files" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">5</span> スターターキットを配置</div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 4-1</div>
+    <div class="step-title">このフォルダの .claude をホームにコピー</div>
+    <div class="step-desc">このHTMLと同じフォルダにある <code style="font-family:var(--mono);background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;font-size:12px;">.claude</code> フォルダを、自分のホームフォルダにコピーします。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>cp -R ~/claude-starter-kit/.claude ~/</code>
+    </div>
+
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text">
+            <strong>cp -R</strong> = フォルダごとまるっとコピーするコマンド<br>
+            <strong>~/claude-starter-kit/.claude</strong> = コピー元（このスターターキットの中の設定フォルダ）<br>
+            <strong>~/</strong> = コピー先（あなたのMacのホームフォルダ）<br><br>
+            つまり、<strong>スターターキットの設定ファイルが、あなたのMacの「~/.claude/」にコピーされます。</strong><br><br>
+            Claude Codeは起動するたびに「~/.claude/」フォルダを自動的に読み込みます。なので、ここに設定ファイルを置くだけで以下が全て有効になります：<br><br>
+            ・スキル17個（YouTube文字起こし、X検索、深掘り調査など）<br>
+            ・安全ルール（ファイル削除ブロック、機密情報保護など）<br>
+            ・セキュリティフック（危険な操作を自動で止める仕組み）<br>
+            ・作業の自動引き継ぎ（セッションが切れても前回の続きから再開）<br>
+            ・デザインの好み設定（HTML生成時のテーマカラーやスタイル）<br><br>
+            <strong>特別な設定作業は不要で、コピーするだけでClaude Codeが最初から高機能な状態で使えます。</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-info" style="margin-top:12px;">
+      <div class="alert-label">補足</div>
+      もしフォルダの場所が違う場合は、このスターターキットのフォルダがある場所に合わせてパスを変えてください。<br>
+      例: USBで渡された場合 → <code style="font-family:var(--mono);font-size:11px;">cp -R /Volumes/USBの名前/claude-starter-kit/.claude ~/</code>
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">STEP 4-2</div>
+    <div class="step-title">hookスクリプトに実行権限を付ける</div>
+    <div class="step-desc">セキュリティ機能を動かすために必要です。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>chmod +x ~/.claude/hooks/*.sh</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>chmod +x</strong> = ファイルに「実行してもいいよ」という許可を与えるコマンド<br><strong>~/.claude/hooks/*.sh</strong> = .claude/hooksフォルダ内の全てのスクリプトファイル<br><br>Macではセキュリティ上、ファイルをコピーしただけでは「実行権限」が付きません。このコマンドでセキュリティフック（危険な操作を自動でブロックするスクリプト）に実行権限を付けます。<br><br>これを忘れると、安全インストーラーやセッション切れ前の自動保存が動きません。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- What's Included -->
+<section id="whats-included" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">6</span> 中に入っているもの</div>
+
+  <div class="file-tree">
+    <span class="dir">.claude/</span><br>
+    &nbsp;&nbsp;<span class="file">CLAUDE.md</span> ............. AIの振る舞いルール（安全ルール、報告ルール等）<br>
+    &nbsp;&nbsp;<span class="file">settings.json</span> ....... hook設定（セキュリティ自動チェック）<br>
+    &nbsp;&nbsp;<span class="dir">skills/</span> ................ スキル17個（YouTube文字起こし、X検索等）<br>
+    &nbsp;&nbsp;<span class="dir">scripts/</span> ............... 安全スキルインストーラー<br>
+    &nbsp;&nbsp;<span class="dir">hooks/</span> ................. セキュリティフック（自動保護）<br>
+    &nbsp;&nbsp;<span class="dir">docs/</span> .................. トークン管理・セッション管理の詳細ルール<br>
+    &nbsp;&nbsp;<span class="dir">projects/memory/</span> .. デザイン好み・作業メモリ
+  </div>
+
+  <div class="alert alert-success">
+    <div class="alert-label">ポイント</div>
+    これらは全て「Claude Codeの能力を底上げする設定ファイル」です。<br>
+    普通にインストールしただけのClaude Codeより、はるかに賢く・安全に動きます。
+  </div>
+</section>
+
+<!-- CLAUDE.md 解説 -->
+<section id="claude-md" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#7c3aed;">C</span> CLAUDE.md -- 全ルール解説</div>
+  <div class="step-desc" style="margin-bottom:16px;">CLAUDE.mdは「Claude Codeの振る舞いを決めるルールブック」です。このファイルがあることで、Claude Codeが勝手に危険なことをしたり、分かりにくい説明をしたりすることを防いでいます。<br>以下、各ルールの意味と「なぜこのルールがあるのか」を解説します。</div>
+
+  <!-- 機密情報の予防・検知 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">機密情報の予防・検知</span>
+    </div>
+    <div class="rule-what">APIキーやパスワードをClaude Codeに渡さない・見せないルール。スクリーンショットに機密情報が映っていた場合も即座に警告する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">Claude Codeとの会話内容は、AIの処理のためにAnthropicのサーバーに送信されます。つまり、会話の中にAPIキーを貼り付けると、そのキーがAnthropicのサーバーを経由することになります。万が一の情報漏洩リスクを考えると、機密情報は「Claude Codeには絶対に渡さない」のが最も安全です。<br><br>このルールにより、Claude Code側から「キーは私に見せず、別のターミナルで.envファイルに直接貼ってください」と案内してくれます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §5</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- .claudeignore -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">.claudeignore（プロジェクト作成時に必須）</span>
+    </div>
+    <div class="rule-what">新しいプロジェクトを作る時、最初に.claudeignoreファイルを設置する。これにより.envなどの機密ファイルがClaude Codeから見えなくなる。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">.claudeignoreがない状態だと、Claude Codeはプロジェクト内の全ファイルを読めてしまいます。.envファイルにはAPIキーやデータベースのパスワードが書いてあるので、Claude Codeがそれを読み取って会話に含めてしまうと、意図せず機密情報がAnthropicサーバーに送られるリスクがあります。<br><br>.claudeignoreを設置することで、「そもそもClaude Codeには見えない」状態を作れます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §4</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- printenv禁止 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">printenv / env コマンド実行禁止</span>
+    </div>
+    <div class="rule-what">環境変数を一覧表示するコマンド（printenv, env, set等）は絶対に実行しない。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">.claudeignoreで.envファイルを隠しても、printenvコマンドを実行するとOSレベルで環境変数が全て表示されます。APIキーは通常環境変数に設定するため、printenvの出力にキーがそのまま含まれます。<br><br>つまり、.claudeignoreの「ファイルを見せない」防御を、コマンド経由で迂回できてしまうのです。このルールで、その抜け道を塞いでいます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §5 予防セクション</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- スキル安全インストール -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">スキルの安全インストール</span>
+    </div>
+    <div class="rule-what">ネットからスキルを追加する時、npx skills add は使わず、専用の安全インストーラー（safe-skill-install.py）を使う。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">npx skills add を使うと、インターネットからスキルファイルをダウンロードして直接実行します。もしそのスキルに悪意のあるコード（リバースシェル、データ送信、ファイル削除等）が含まれていた場合、PCが乗っ取られたり情報が盗まれるリスクがあります。<br><br>safe-skill-install.pyは、ダウンロード後に「セキュリティ検査」を自動で行います。危険なパターン（外部へのデータ送信、隠されたコード実行等）を検知したら、保存せずにブロックします。hookで npx skills add を自動ブロックしているので、うっかり使おうとしてもClaude Codeが止めてくれます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> スキル安全インストール / <code>scripts/safe-skill-install.py</code> / <code>hooks/guard-remote-skills.sh</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 大タスク前の自動セーブ -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge workflow">ワークフロー</span>
+      <span class="rule-title">大タスク前の自動セーブ</span>
+    </div>
+    <div class="rule-what">大きな作業（HTML生成、複数エージェント並行実行等）を始める前に、自動でフィードバックとHANDOVER（引き継ぎ書）を保存する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">Claude Codeにはトークン（会話の長さ）の上限があります。大きな作業はトークンを大量に消費するため、作業途中でセッションが切れることがあります。<br><br>セッションが切れると、それまでの会話内容やユーザーが伝えたフィードバックが全て失われます。同じことを何度も説明し直す無駄が発生します。<br><br>このルールにより、大きな作業の前に「ここまでで分かっていること」を自動保存するので、万が一セッションが切れても、次のセッションですぐに続きから再開できます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 大タスク前の自動セーブ</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- トークン自己監視 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge workflow">ワークフロー</span>
+      <span class="rule-title">トークン使用量の自己監視</span>
+    </div>
+    <div class="rule-what">10-20ターンごとにトークン使用量をチェック。75%で引き継ぎ書を自動生成、90%で作業を一時停止する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">Claude Codeのセッションにはトークン上限（約200,000トークン）があり、上限に達するとセッションが突然切れます。何の前触れもなく切れるため、作業途中の内容がすべて失われます。<br><br>これを何度か経験した結果、「セッションが切れる前に、自分で気づいて引き継ぎ書を作っておく」ルールが生まれました。75%到達後は毎ターンチェックするので、「気づいたら100%でした」という事態を防げます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>docs/token-monitoring.md</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- セッション開始時のハンドオーバー確認 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge workflow">ワークフロー</span>
+      <span class="rule-title">セッション開始時の自動ハンドオーバー確認</span>
+    </div>
+    <div class="rule-what">新しいセッションを始めた時、前回の引き継ぎ書（HANDOVER.md）があれば自動で検出し、続きから再開するか確認してくれる。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">上のトークン監視で引き継ぎ書を作っても、次のセッションで「その引き継ぎ書を読んで」と手動で伝えるのは面倒です。このルールにより、セッション開始時に自動で前回の引き継ぎ書を検出し、「続きをやりますか？」と聞いてくれます。<br><br>「はい」なら前回の続きから、「いいえ」なら引き継ぎ書をアーカイブして新規スタートします。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>docs/session-start.md</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 上書き禁止 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">既存ファイルの上書き禁止（確認必須）</span>
+    </div>
+    <div class="rule-what">既存のファイルを編集・上書きする前に、必ず確認メッセージを出す。可能ならバックアップも作る。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">Claude Codeはデフォルトだと、ファイルを確認なしに上書きすることがあります。これは便利な反面、意図しない変更でファイルが壊れるリスクがあります。特に長時間かけて作ったHTMLやコード、設定ファイルが確認なしに上書きされると、元に戻すのが大変です。<br><br>このルールで「上書きしていいですか？」という確認が必ず入るようになります。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 削除コマンド禁止 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">削除コマンドの実行禁止</span>
+    </div>
+    <div class="rule-what">rm、rm -rf、rmdir などの削除系コマンドは原則実行しない。どうしても必要な場合は理由を説明して承認を求める。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">rm -rfコマンドは「指定したフォルダ以下を確認なしで全削除する」非常に強力なコマンドです。一度実行すると元に戻せません。AIが判断を間違えて重要なファイルやフォルダを削除してしまうリスクを排除するため、このルールがあります。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §2</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- パッケージ追加は事前承認 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge security">セキュリティ</span>
+      <span class="rule-title">パッケージ追加は事前説明と承認が必要</span>
+    </div>
+    <div class="rule-what">npm install等でパッケージ（追加機能）を入れる前に、何を・なぜ・どの範囲に入れるかを説明し、承認を得てから実行する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">パッケージ（追加機能のライブラリ）は便利ですが、不要なパッケージが増えるとプロジェクトが重くなり、依存関係の問題も起きやすくなります。また、悪意のあるパッケージが紛れ込むリスクもゼロではありません。<br><br>このルールで、Claude Codeが勝手にパッケージを入れることを防ぎ、何が入るか理解した上で判断できるようにしています。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- コマンド説明 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge comm">コミュニケーション</span>
+      <span class="rule-title">不明なコマンドは実行前に日本語で説明</span>
+    </div>
+    <div class="rule-what">技術的なコマンドを実行する前に、日本語で分かりやすく「これは○○をするコマンドです」と説明し、OKをもらってから実行する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこのルールがあるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">このスターターキットは非エンジニア向けに設計されています。Claude Codeは技術的なコマンドをそのまま実行しようとしますが、内容が分からないまま実行するのは不安ですし危険です。<br><br>このルールにより、Claude Codeが何をしようとしているか日本語で説明してくれるので、安心して使えます。</div>
+        </div>
+        <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> 安全ルール §6</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日本語で分かりやすく -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge comm">コミュニケーション</span>
+      <span class="rule-title">日本語で分かりやすく</span>
+    </div>
+    <div class="rule-what">全て日本語で回答。技術用語は使わない（使う場合は言い換えを先に置く）。非エンジニア前提で説明する。</div>
+    <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> コミュニケーションルール §1</div>
+  </div>
+
+  <!-- ホウレンソウ -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge comm">コミュニケーション</span>
+      <span class="rule-title">進捗報告（ホウレンソウ）</span>
+    </div>
+    <div class="rule-what">作業中は言われなくても状況を報告する。複数タスク並行時は表形式でまとめる。エラー時はすぐ報告して対処法を案内する。</div>
+    <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> コミュニケーションルール §2</div>
+  </div>
+
+  <!-- 逆質問 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge quality">品質</span>
+      <span class="rule-title">逆質問による暗黙知の引き出し</span>
+    </div>
+    <div class="rule-what">新しいスキルや仕組みを作る時、いきなり作り始めず、まず5〜10個の質問で「あなたが求めているもの」を正確に把握してから着手する。</div>
+    <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> スキル構築の自動提案 §1</div>
+  </div>
+
+  <!-- 成功事例の自動保存 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge quality">品質</span>
+      <span class="rule-title">成功事例の自動保存提案</span>
+    </div>
+    <div class="rule-what">成果物に「OK」と言ったら、「成功事例として保存しますか？」と提案してくれる。保存すると次回以降のリファレンスになる。</div>
+    <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> スキル構築の自動提案 §2</div>
+  </div>
+
+  <!-- コア原則 -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge quality">品質</span>
+      <span class="rule-title">コア原則（シンプル・怠けない・最小影響）</span>
+    </div>
+    <div class="rule-what">あらゆる変更は最小限でシンプルに。根本原因を見つけて一時しのぎしない。必要な箇所だけ触り、新しい問題を持ち込まない。</div>
+    <div class="rule-ref">対応ファイル: <code>CLAUDE.md</code> コア原則</div>
+  </div>
+</section>
+
+<!-- MEMORY.md 解説 -->
+<section id="memory-md" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#d97706;">M</span> MEMORY.md -- 設定解説</div>
+  <div class="step-desc" style="margin-bottom:16px;">MEMORY.mdは「Claude Codeの記憶」です。セッションをまたいでも覚えていてほしい設定・好み・学習内容がここに保存されます。使っていくうちに自動で蓄積されていきます。</div>
+
+  <!-- YouTubeも含める -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge memory">記憶</span>
+      <span class="rule-title">調べ物には必ずYouTubeも含める</span>
+    </div>
+    <div class="rule-what">リサーチ時はWeb記事だけでなく、YouTube動画も検索して文字起こしし、情報を抽出する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこの設定があるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">Web記事だけで調査すると、情報が偏ります。特にノウハウ系・実践系の情報はYouTubeの方が圧倒的に充実していることが多く、記事には載っていない実務レベルの知見がYouTubeにはあります。<br><br>スターターキットには/youtube-transcriptスキルが入っているので、YouTube動画のURLを渡すだけで文字起こしして内容を抽出できます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Opus/Sonnet使い分け -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge memory">記憶</span>
+      <span class="rule-title">Opus / Sonnet の使い分け</span>
+    </div>
+    <div class="rule-what">Opusは高性能だがトークン消費が多い。作業内容に応じてOpusとSonnetを使い分ける。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこの設定があるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">Claude CodeにはOpus（高性能・高コスト）とSonnet（標準性能・低コスト）の2つのモデルがあります。全部Opusで作業するとAPIコストが高くつきます。<br><br><strong>Sonnet向き:</strong> HTML構造の変更、パターン通りの編集、明確な指示の実行など「やることが決まっている作業」<br><strong>Opus向き:</strong> ゼロからのデザイン設計、曖昧な要件の解釈、リサーチ、複雑な判断など「考える必要がある作業」<br><br>切り替えは /model コマンドで行えます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- フルパスコマンド -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge memory">記憶</span>
+      <span class="rule-title">ターミナルコマンドは必ずフルパスで伝える</span>
+    </div>
+    <div class="rule-what">コマンドを案内する時、フォルダ移動（cd）も含めたコピペ可能な完全なコマンドを提示する。</div>
+    <div class="rule-toggle" onclick="toggleRule(this)"><span class="chevron">&#9654;</span> なぜこの設定があるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">背景</div>
+          <div class="rule-story-text">非エンジニアの場合、「git push origin main」とだけ言われても「どこで実行すればいいの？」となります。ターミナルは「今いるフォルダ」によって結果が変わるため、フォルダ移動を含めた完全なコマンド（例: cd ~/sns-automation && git push origin main）を伝えることで、コピペするだけで確実に実行できます。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- gitこまめコミット -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge memory">記憶</span>
+      <span class="rule-title">gitこまめコミット</span>
+    </div>
+    <div class="rule-what">機能追加や修正が一段落するたびに、確認なしで自動的にgitコミット（変更の保存ポイント）を作る。</div>
+    <div class="rule-ref">効果: 何か問題が起きた時に、直前の正常な状態に戻せる「セーブポイント」が細かく作られます。</div>
+  </div>
+
+  <!-- セキュリティルール -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge memory">記憶</span>
+      <span class="rule-title">セキュリティ・リスク対応ルール</span>
+    </div>
+    <div class="rule-what">CLAUDE.mdの安全ルールと連動。APIキーの取り扱い、リスクの先回り報告など。</div>
+    <div class="rule-ref">CLAUDE.mdの安全ルールと同じ内容が、記憶としても保存されています。これにより、セッションが変わっても一貫してルールが適用されます。</div>
+  </div>
+
+  <!-- 調査品質ルール -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge quality">品質</span>
+      <span class="rule-title">調査・統合の品質ルール</span>
+    </div>
+    <div class="rule-what">複数ソースの統合時は件数を突き合わせる。1サービス＝1評価。全件提示、省略しない。</div>
+    <div class="rule-ref">調査系スキル（/deepdive, /company-research等）で特に重要。結果をまとめる時に情報が抜け落ちることを防ぎます。</div>
+  </div>
+
+  <!-- デザインの好み -->
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge memory">記憶</span>
+      <span class="rule-title">デザインの好み（design-preferences.md）</span>
+    </div>
+    <div class="rule-what">HTML生成時のデザインルール。テーマカラー（コーラル × スカイブルー）、絵文字NG、ピンクNG、テーブル内改行NG、シンプル優先など。</div>
+    <div class="rule-ref">別ファイル <code>projects/memory/design-preferences.md</code> に詳細が記載されています。Claude CodeがHTMLを生成する時、この好みに従ってデザインしてくれます。</div>
+  </div>
+</section>
+
+<!-- First Launch -->
+<section id="first-launch" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">7</span> 起動方法</div>
+
+  <div class="step-card">
+    <div class="step-label">基本の起動</div>
+    <div class="step-title">ターミナルで claude と打つだけ</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>claude</code>
+    </div>
+    <div class="step-desc">対話モードが開きます。日本語で普通に話しかければOKです。</div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">作業フォルダで起動（推奨）</div>
+    <div class="step-title">STEP 3で作ったフォルダに移動してから起動</div>
+    <div class="step-desc">Claude Codeは「今いるフォルダ」を作業場所として認識します。STEP 3で作った作業フォルダに移動してから起動しましょう。</div>
+    <div class="code-block">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>cd ~/Documents/Claude_Work && claude</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:10px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>cd ~/Documents/Claude_Work</strong> = 書類フォルダのClaude_Workに移動<br><strong>&& claude</strong> = 移動が成功したらClaude Codeを起動<br><br>この順序で起動することで、Claude Codeが作業フォルダ内のCLAUDE.md（プロジェクト設定）も読み込んでくれます。毎回このコマンドで起動するのがおすすめです。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Basic Usage -->
+<section id="basic-usage" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">8</span> 基本操作</div>
+
+  <div class="step-card">
+    <div class="step-label">覚えておくこと</div>
+    <div class="step-title">3つだけ覚えればOK</div>
+    <ul class="checklist">
+      <li><span class="check-icon">1</span><span><strong>日本語で話しかける</strong> -- 「○○を調べて」「○○を作って」等、普通に指示するだけ</span></li>
+      <li><span class="check-icon">2</span><span><strong>/help</strong> -- 困ったらこれを打てばヘルプが出る</span></li>
+      <li><span class="check-icon">3</span><span><strong>Ctrl + C</strong> -- 作業を中断したい時。2回押すと終了</span></li>
+    </ul>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">便利なコマンド</div>
+    <div class="step-title">よく使うもの</div>
+    <ul class="checklist">
+      <li><span class="check-icon">/</span><span><strong>/compact</strong> -- 会話が長くなってきたら圧縮（自動でもやってくれる）</span></li>
+      <li><span class="check-icon">/</span><span><strong>/clear</strong> -- 会話をリセットして最初から</span></li>
+      <li><span class="check-icon">/</span><span><strong>Shift + Tab</strong> -- 承認モードの切り替え（毎回承認 / 自動承認）</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- Skills -->
+<section id="skills" class="glass-card reveal">
+  <div class="section-title"><span class="section-num">9</span> 使えるスキル一覧</div>
+  <div class="step-desc" style="margin-bottom: 16px;">スキルは「Claude Codeに追加された特殊能力」です。名前をスラッシュ付きで打つか、日本語で頼めば起動します。</div>
+
+  <div class="skill-grid">
+    <div class="skill-tag"><div class="skill-name">/youtube-transcript</div><div class="skill-desc">YouTube動画の文字起こし</div></div>
+    <div class="skill-tag"><div class="skill-name">/x-research</div><div class="skill-desc">X(Twitter)投稿をリアルタイム検索</div></div>
+    <div class="skill-tag"><div class="skill-name">/deepdive</div><div class="skill-desc">タスクの深掘り調査+HTMLレポート</div></div>
+    <div class="skill-tag"><div class="skill-name">/company-research</div><div class="skill-desc">企業の魅力分析レポート</div></div>
+    <div class="skill-tag"><div class="skill-name">/frontend-design</div><div class="skill-desc">高品質なWebデザイン生成</div></div>
+    <div class="skill-tag"><div class="skill-name">/design-test</div><div class="skill-desc">デザイン5パターン比較</div></div>
+    <div class="skill-tag"><div class="skill-name">/industry-report-html</div><div class="skill-desc">業界レポートHTML変換</div></div>
+    <div class="skill-tag"><div class="skill-name">/copywriting</div><div class="skill-desc">マーケティングコピー作成</div></div>
+    <div class="skill-tag"><div class="skill-name">/copy-editing</div><div class="skill-desc">コピーの編集・改善</div></div>
+    <div class="skill-tag"><div class="skill-name">/marketing-psychology</div><div class="skill-desc">行動科学をマーケに活用</div></div>
+    <div class="skill-tag"><div class="skill-name">/data-storytelling</div><div class="skill-desc">データを説得力ある物語に</div></div>
+    <div class="skill-tag"><div class="skill-name">/legal-risk-card</div><div class="skill-desc">法的リスクQ&A生成</div></div>
+    <div class="skill-tag"><div class="skill-name">/pipeline-design</div><div class="skill-desc">パイプライン設計</div></div>
+    <div class="skill-tag"><div class="skill-name">/wbs-theme-restructure</div><div class="skill-desc">WBS構造変換</div></div>
+  </div>
+
+  <div class="alert alert-info" style="margin-top: 12px;">
+    <div class="alert-label">使い方の例</div>
+    「この動画の内容を文字起こしして → (YouTubeのURL)」<br>
+    「Xで『SNS運用 自動化』について調べて」<br>
+    「○○について深掘り調査して」
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- 新しいスキルの探し方 -->
+  <div class="step-card">
+    <div class="step-label">スキルを増やす</div>
+    <div class="step-title">ネットで公開されているスキルを探して追加する方法</div>
+    <div class="step-desc">
+      上のスキルはRIOが作成・導入したものですが、世界中の開発者がスキルを公開しています。自分でゼロから作ることもできますが、<strong>まずは既にあるスキルを探して使う</strong>のが効率的です。<br><br>
+      ただ「どこで探せばいいか分からない」ということもあると思うので、主要なスキルの探し先を5つ載せておきます。
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-top:10px;background:rgba(37,99,235,0.03);">
+    <div class="step-label" style="color:var(--blue);">スキルの探し先 5選</div>
+    <div class="step-title">このURLをブックマークしておこう</div>
+
+    <div style="margin:12px 0;">
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <span style="background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0;">1</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;">Claude Code 公式ドキュメント（Skills）</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">Anthropic公式のスキル解説ページ。スキルの仕組みと作り方の基本</div>
+          <div class="code-block" style="margin-top:6px;padding:10px 14px;">
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            <code>https://code.claude.com/docs/en/skills</code>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <span style="background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0;">2</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;">Anthropic 公式GitHub</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">Anthropic社の公式リポジトリ一覧。公式ツールやサンプルが揃っている</div>
+          <div class="code-block" style="margin-top:6px;padding:10px 14px;">
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            <code>https://github.com/anthropics</code>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <span style="background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0;">3</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;">Awesome Claude Skills（BehiSecc版）</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">コミュニティがまとめたスキル集。カテゴリ別に整理されていて探しやすい</div>
+          <div class="code-block" style="margin-top:6px;padding:10px 14px;">
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            <code>https://github.com/BehiSecc/awesome-claude-skills</code>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.05);">
+        <span style="background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0;">4</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;">Claude Codeスキル解説記事（Qiita）</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">日本語で書かれたスキルの使い方・導入方法の解説記事</div>
+          <div class="code-block" style="margin-top:6px;padding:10px 14px;">
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            <code>https://qiita.com/shatolin/items/ca1810e419fee5fd963b</code>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;">
+        <span style="background:var(--blue);color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;flex-shrink:0;">5</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;">Antigravity Awesome Skills（sickn33版）</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">もう一つのコミュニティスキル集。ユニークなスキルが多い</div>
+          <div class="code-block" style="margin-top:6px;padding:10px 14px;">
+            <button class="copy-btn" onclick="copyCode(this)">copy</button>
+            <code>https://github.com/sickn33/antigravity-awesome-skills</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-top:10px;background:rgba(5,150,105,0.03);">
+    <div class="step-label" style="color:#059669;">おすすめの使い方</div>
+    <div class="step-title">Claude Codeに探してもらう</div>
+    <div class="step-desc">
+      自分で全部読む必要はありません。<strong>上のURLをClaude Codeとの会話にそのまま貼り付けて</strong>、こう聞くだけでOKです：
+    </div>
+    <div class="code-block" style="margin-top:10px;background:#1a1a2e;">
+      <code style="color:#93c5fd;"><span style="color:rgba(255,255,255,0.4);">あなた ></span> このページから、SNS運用に使えそうなスキルはないですか？
+
+https://github.com/BehiSecc/awesome-claude-skills</code>
+    </div>
+    <div class="step-desc" style="margin-top:10px;">
+      Claude Codeがページの内容を読んで、今の作業に本当に必要なスキルだけを選んで提案してくれます。<br>
+      「これは役立ちそうですか？インストールしますか？」と聞いてくれるので、<strong>自分で技術的なことを判断する必要はありません</strong>。
+    </div>
+  </div>
+</section>
+
+<!-- Security -->
+<section id="security" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#dc2626;">!</span> セキュリティ 必読</div>
+
+  <ul class="checklist">
+    <li><span class="check-icon" style="background:rgba(220,38,38,0.1);color:#dc2626;">1</span><span><strong>APIキーを会話に貼らない</strong> -- Claude Codeとの会話にキーやパスワードを貼らないでください。設定は別ターミナルで行う</span></li>
+    <li><span class="check-icon" style="background:rgba(220,38,38,0.1);color:#dc2626;">2</span><span><strong>スクリーンショットに注意</strong> -- 画面共有やスクショにAPIキーが映り込んでいないか確認</span></li>
+    <li><span class="check-icon" style="background:rgba(220,38,38,0.1);color:#dc2626;">3</span><span><strong>.envファイルは自分で編集</strong> -- Claude Codeに「.envを見せて」と言わない。自分で別ターミナルから編集する</span></li>
+    <li><span class="check-icon" style="background:rgba(220,38,38,0.1);color:#dc2626;">4</span><span><strong>新しいスキルは安全インストーラーで</strong> -- ネットからスキルを追加する時は、Claude Codeが自動で安全チェックしてくれます</span></li>
+  </ul>
+
+  <div class="alert alert-warn" style="margin-top: 12px;">
+    <div class="alert-label">自動保護機能について</div>
+    このスターターキットには、危険な操作を自動でブロックするセキュリティ機能が組み込まれています。<br>
+    ファイルの削除・上書き時は必ず確認が入るので、安心して使えます。
+  </div>
+</section>
+
+<!-- Safety Reassurance -->
+<section id="safety" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#059669;">OK</span> 壊れないから安心してください</div>
+
+  <div class="step-desc" style="margin-bottom:16px; font-size:14px;">Claude Codeを使い始める時、「変なことをしてPCが壊れたらどうしよう」と不安になるかもしれません。でも、このスターターキットには安全装置が入っているので、安心して使えます。</div>
+
+  <ul class="checklist">
+    <li><span class="check-icon" style="background:rgba(5,150,105,0.1);color:#059669;">1</span><span><strong>ファイルを勝手に消さない</strong> -- 削除コマンドは原則ブロックされています。どうしても必要な場合は理由を説明して、あなたの許可を得てから実行します</span></li>
+    <li><span class="check-icon" style="background:rgba(5,150,105,0.1);color:#059669;">2</span><span><strong>ファイルを勝手に上書きしない</strong> -- 既存のファイルを変更する前に「上書きしていいですか？」と確認が入ります</span></li>
+    <li><span class="check-icon" style="background:rgba(5,150,105,0.1);color:#059669;">3</span><span><strong>やり直しができる</strong> -- gitで「セーブポイント」がこまめに作られるので、何か問題が起きても前の状態に戻せます</span></li>
+    <li><span class="check-icon" style="background:rgba(5,150,105,0.1);color:#059669;">4</span><span><strong>分からないことは日本語で説明してくれる</strong> -- 技術的なコマンドは実行前に「これは○○するコマンドです」と説明し、OKをもらってから実行します</span></li>
+    <li><span class="check-icon" style="background:rgba(5,150,105,0.1);color:#059669;">5</span><span><strong>PCが壊れることはない</strong> -- Claude CodeはOSの重要なファイルには触れません。あくまで作業フォルダ内のファイルを操作するだけです</span></li>
+  </ul>
+</section>
+
+<!-- Cost Guide -->
+<section id="cost" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#d97706;">$</span> 料金プランと選び方</div>
+
+  <!-- 課金場所の違い -->
+  <div class="alert alert-warn" style="margin-bottom:16px;">
+    <div class="alert-label">最初に知っておくべきこと：課金場所が2つある</div>
+    <strong>Claude（Web版チャット）</strong>と<strong>Claude Code（ターミナルのAI）</strong>は、課金される場所が違います。<br><br>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.1);">
+        <td style="padding:6px 8px;font-weight:700;">サービス</td>
+        <td style="padding:6px 8px;font-weight:700;">課金場所</td>
+        <td style="padding:6px 8px;font-weight:700;">URL</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:6px 8px;">Claude Web版<br><span style="color:var(--text-sub);">（ブラウザのチャット）</span></td>
+        <td style="padding:6px 8px;">claude.ai</td>
+        <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;">claude.ai/settings/billing</td>
+      </tr>
+      <tr>
+        <td style="padding:6px 8px;">Claude Code<br><span style="color:var(--text-sub);">（ターミナルのAI）</span></td>
+        <td style="padding:6px 8px;">Anthropic Console</td>
+        <td style="padding:6px 8px;font-family:var(--mono);font-size:11px;">console.anthropic.com</td>
+      </tr>
+    </table>
+    <br>
+    <strong>Pro/Maxプランに入ると両方で使える</strong>ので課金場所は1つになりますが、<strong>API従量課金（APIキー）の場合はAnthropic Console側だけ</strong>で課金されます。混同しないように注意してください。
+  </div>
+
+  <!-- プラン一覧 -->
+  <div class="step-card">
+    <div class="step-label">4つの選択肢</div>
+    <div class="step-title">Claude Codeの料金プラン</div>
+    <div class="step-desc" style="margin-bottom:12px;">Claude Codeを使う方法は大きく4つあります。</div>
+
+    <table style="width:100%;border-collapse:collapse;font-size:12px;line-height:1.6;">
+      <tr style="background:rgba(37,99,235,0.06);border-bottom:2px solid rgba(0,0,0,0.1);">
+        <td style="padding:8px;font-weight:700;">プラン</td>
+        <td style="padding:8px;font-weight:700;">月額</td>
+        <td style="padding:8px;font-weight:700;">仕組み</td>
+        <td style="padding:8px;font-weight:700;">向いている人</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:8px;font-weight:600;">API従量課金</td>
+        <td style="padding:8px;">使った分だけ</td>
+        <td style="padding:8px;">APIキーを設定して使う。トークン（会話量）に応じて課金</td>
+        <td style="padding:8px;">使用量が少ない or 月によってバラつきがある人</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:8px;font-weight:600;">Pro</td>
+        <td style="padding:8px;">$20<br><span style="color:var(--text-sub);">(約3,000円)</span></td>
+        <td style="padding:8px;">定額でClaude Code + Web版の両方を使える。ただし使用量に上限あり</td>
+        <td style="padding:8px;">お試しで使いたい人。たまにしか使わない人</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:8px;font-weight:600;color:var(--blue);">Max 5x</td>
+        <td style="padding:8px;">$100<br><span style="color:var(--text-sub);">(約15,000円)</span></td>
+        <td style="padding:8px;">Proの5倍の使用量。Opusモデルも使える。定額で安心</td>
+        <td style="padding:8px;">毎日1〜2時間使う人。API従量で月$100前後かかっている人</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;font-weight:600;color:var(--blue);">Max 20x</td>
+        <td style="padding:8px;">$200<br><span style="color:var(--text-sub);">(約30,000円)</span></td>
+        <td style="padding:8px;">Proの20倍の使用量。ヘビーユースでも安心の大容量</td>
+        <td style="padding:8px;">毎日ガッツリ使う人。複数プロジェクトを同時進行する人</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- API従量課金の詳細 -->
+  <div class="step-card">
+    <div class="step-label">プラン詳細 1</div>
+    <div class="step-title">API従量課金（このガイドのSTEP 3で設定した方式）</div>
+    <div class="step-desc">
+      APIキーを使ってClaude Codeを動かす方式です。使った分だけ課金されます。<br><br>
+      <strong>料金の目安:</strong><br>
+      ・軽い作業（質問、調べ物、短い指示）: 1セッションあたり数十円〜数百円<br>
+      ・重い作業（大規模なHTML生成、長い調査）: 1セッションあたり数百円〜千円程度<br>
+      ・1日の通常利用: 数百円〜2,000円程度<br><br>
+      <strong>モデルによる価格差:</strong> Opusモデル（高性能）はSonnet（標準）の約1.7倍高い。軽い作業はSonnetで十分なので、<code style="font-family:var(--mono);background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;font-size:12px;">/model</code> で切り替えるとコスト節約になります。
+    </div>
+    <div class="alert alert-info" style="margin-top:10px;">
+      <div class="alert-label">使用額の確認方法</div>
+      Claude Code内で <code style="font-family:var(--mono);background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;font-size:12px;">/cost</code> と打つと、そのセッションでいくら使ったか確認できます。
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- 上限設定 -->
+  <div class="step-card">
+    <div class="step-label">必須</div>
+    <div class="step-title">API従量課金の場合：月額上限を必ず設定する</div>
+    <div class="step-desc">使いすぎを防ぐために、Anthropic Consoleで月額の上限を設定できます。</div>
+    <ul class="checklist">
+      <li><span class="check-icon">1</span><span>ブラウザで <strong>console.anthropic.com</strong> にログイン</span></li>
+      <li><span class="check-icon">2</span><span>Settings（設定）→ Billing（課金）→ Usage Limit（利用上限）に進む</span></li>
+      <li><span class="check-icon">3</span><span>月額の上限金額を設定する（最初は$50〜$100程度がおすすめ）</span></li>
+    </ul>
+    <div class="alert alert-warn" style="margin-top:10px;">
+      <div class="alert-label">注意</div>
+      上限を設定しないと、使った分だけ際限なく課金されます。<strong>最初に必ず上限を設定してから</strong>使い始めてください。
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- Pro/Maxの詳細 -->
+  <div class="step-card">
+    <div class="step-label">プラン詳細 2</div>
+    <div class="step-title">Pro / Max プラン（定額制）</div>
+    <div class="step-desc">
+      claude.ai でサブスク契約すると、Claude Code も Web版チャットも<strong>定額</strong>で使えます。APIキーは不要で、Claude Code起動時にアカウントでログインするだけです。<br><br>
+      <strong>Pro（$20/月）:</strong> Web版メインでClaude Codeも少し使いたい人向け。ヘビーに使うとすぐ上限に達します。<br><br>
+      <strong>Max 5x（$100/月）:</strong> 毎日Claude Codeを使う人に最適。API従量課金で月$100前後かかっているなら、こちらの方が安心。Opusモデルも使える。<br><br>
+      <strong>Max 20x（$200/月）:</strong> 1日中Claude Codeを回す人向け。使用量がMax 5xで足りない場合に。
+    </div>
+    <div class="alert alert-info" style="margin-top:10px;">
+      <div class="alert-label">使用量の上限について</div>
+      Pro/Maxプランの使用量は<strong>週ごとにリセット</strong>されます。上限に達しても翌週にはまた使えます。Web版チャットとClaude Codeで使用量は共有です。
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- おすすめの選び方 -->
+  <div class="step-card">
+    <div class="step-label">判断ガイド</div>
+    <div class="step-title">どのプランをどのタイミングで選ぶか</div>
+    <div class="step-desc" style="margin-bottom:12px;">まずはAPI従量課金で始めて、使用量に応じてプラン変更するのがおすすめです。</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12px;line-height:1.6;">
+      <tr style="background:rgba(5,150,105,0.06);border-bottom:2px solid rgba(0,0,0,0.1);">
+        <td style="padding:8px;font-weight:700;">ステージ</td>
+        <td style="padding:8px;font-weight:700;">おすすめプラン</td>
+        <td style="padding:8px;font-weight:700;">判断基準</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:8px;font-weight:600;">最初の1〜2週間</td>
+        <td style="padding:8px;">API従量課金</td>
+        <td style="padding:8px;">まず実際の使用量を知る。/cost で毎日確認</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:8px;font-weight:600;">月$50以下だった</td>
+        <td style="padding:8px;">API従量課金のまま or Pro($20)</td>
+        <td style="padding:8px;">このままで十分。Proにすると定額で安心感が増す</td>
+      </tr>
+      <tr style="border-bottom:1px solid rgba(0,0,0,0.06);">
+        <td style="padding:8px;font-weight:600;">月$50〜$100</td>
+        <td style="padding:8px;color:var(--blue);font-weight:600;">Max 5x ($100)</td>
+        <td style="padding:8px;">定額で予算が読める。使い放題に近い安心感</td>
+      </tr>
+      <tr>
+        <td style="padding:8px;font-weight:600;">月$100超</td>
+        <td style="padding:8px;color:var(--blue);font-weight:600;">Max 20x ($200)</td>
+        <td style="padding:8px;">ヘビーユーザー。定額の方が確実に安い</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <!-- 移行時の注意 -->
+  <div class="step-card" style="border:2px solid rgba(220,38,38,0.2);background:rgba(220,38,38,0.03);">
+    <div class="step-label" style="color:#dc2626;">要注意</div>
+    <div class="step-title" style="color:#dc2626;">API従量課金 → Pro/Maxに切り替える時の落とし穴</div>
+    <div class="step-desc">
+      Pro/Maxプランに加入しても、<strong>APIキーの設定が残っているとAPI従量課金が止まりません。</strong><br>
+      つまり<strong>サブスク代 + API従量課金の二重課金</strong>になるリスクがあります。
+    </div>
+    <div class="alert alert-warn" style="margin-top:12px;">
+      <div class="alert-label">なぜこうなるのか</div>
+      Claude Codeは環境変数 <code style="font-family:var(--mono);font-size:11px;">ANTHROPIC_API_KEY</code> が設定されていると、サブスクのアカウントではなく<strong>APIキーを優先して使ってしまう</strong>仕組みです。Pro/Maxに入ったのにAPIキーが残っていると、サブスクは使われず、APIの方に課金が走ります。
+    </div>
+
+    <div class="step-desc" style="margin-top:14px;font-weight:700;">正しい切り替え手順:</div>
+    <ul class="checklist" style="margin-top:8px;">
+      <li><span class="check-icon">1</span><span><strong>claude.ai/settings/billing</strong> でPro/Maxプランに加入する</span></li>
+      <li><span class="check-icon">2</span><span>APIキーの設定を無効にする（以下のコマンドを実行）</span></li>
+    </ul>
+    <div class="code-block" style="margin-top:8px;">
+      <button class="copy-btn" onclick="copyCode(this)">copy</button>
+      <code>sed -i '' '/ANTHROPIC_API_KEY/d' ~/.zshrc && source ~/.zshrc</code>
+    </div>
+    <div class="rule-toggle" onclick="toggleRule(this)" style="margin-top:8px;"><span class="chevron">&#9654;</span> このコマンドで何が起きるか</div>
+    <div class="rule-detail">
+      <div class="rule-detail-inner">
+        <div class="rule-story">
+          <div class="rule-story-label">解説</div>
+          <div class="rule-story-text"><strong>sed -i ''</strong> = ファイルを直接編集するコマンド<br><strong>'/ANTHROPIC_API_KEY/d'</strong> = ANTHROPIC_API_KEYという文字を含む行を削除する<br><strong>~/.zshrc</strong> = Macの設定ファイル（STEP 3-2で書き込んだファイル）<br><strong>source ~/.zshrc</strong> = 変更を即座に反映する<br><br>つまり「STEP 3-2で追加したAPIキーの設定行を消す」コマンドです。これでClaude Codeがサブスクのアカウントを使うようになります。</div>
+        </div>
+      </div>
+    </div>
+    <ul class="checklist" style="margin-top:10px;">
+      <li><span class="check-icon">3</span><span>Claude Codeで <code style="font-family:var(--mono);font-size:11px;">/logout</code> → <code style="font-family:var(--mono);font-size:11px;">/login</code> を実行して、サブスクのアカウントでログインし直す</span></li>
+      <li><span class="check-icon">4</span><span>cmuxを一度閉じて再起動する（Cmd+Q → 再度cmuxを開く）</span></li>
+    </ul>
+    <div class="alert alert-success" style="margin-top:10px;">
+      <div class="alert-label">確認方法</div>
+      切り替え後にClaude Codeで <code style="font-family:var(--mono);font-size:11px;">/cost</code> と打って「APIキーが設定されていません」的なメッセージが出ればOK。サブスクのアカウントで動いています。
+    </div>
+  </div>
+</section>
+
+<!-- Auto Permission Mode -->
+<section id="permission-mode" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:var(--blue);">A</span> 自動承認モード（Dangerously Skip Permissions）</div>
+
+  <div class="step-card">
+    <div class="step-label">概要</div>
+    <div class="step-title">毎回の確認をスキップして自動で実行させる</div>
+    <div class="step-desc">
+      Claude Codeはデフォルトだと、ファイルの読み書きやコマンドの実行のたびに「実行しますか？」と確認を求めてきます。安全ですが、毎回Yesを押すのが面倒です。<br><br>
+      <strong>自動承認モード</strong>をONにすると、Claude Codeが判断して自動で実行してくれます。このスターターキットには安全ルール（削除ブロック、上書き確認等）が組み込まれているので、自動承認モードでも危険な操作はちゃんとブロックされます。
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="step-card">
+    <div class="step-label">切り替え方法</div>
+    <div class="step-title">Shift + Tab で切り替え</div>
+    <div class="step-desc">Claude Codeが起動している状態で <strong>Shift + Tab</strong> を押すと、承認モードが切り替わります。</div>
+    <ul class="checklist">
+      <li><span class="check-icon">1</span><span><strong>通常モード</strong> -- 毎回確認される。最初はこれで慣れるのがおすすめ</span></li>
+      <li><span class="check-icon">2</span><span><strong>自動承認モード</strong> -- 確認なしで実行される。慣れてきたらこちらに切り替え</span></li>
+    </ul>
+    <div class="alert alert-info" style="margin-top:10px;">
+      <div class="alert-label">おすすめの流れ</div>
+      最初の数日は通常モードで使って、「どんな確認が来るか」を体感してください。<br>
+      慣れてきたらShift + Tabで自動承認モードに切り替えると、作業がサクサク進みます。
+    </div>
+  </div>
+</section>
+
+<!-- First Steps Tutorial -->
+<section id="first-steps" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#059669;">1st</span> まずやってみよう（3つのチュートリアル）</div>
+  <div class="step-desc" style="margin-bottom:16px;">セットアップが終わったら、以下の3つを順番に試してみてください。小さなことから始めて感覚を掴むのが大事です。</div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(37,99,235,0.08);color:var(--blue);">STEP 1</span>
+      <span class="rule-title">YouTube動画を文字起こしてみよう</span>
+    </div>
+    <div class="rule-what">好きなYouTube動画のURLをコピーして、Claude Codeに以下のように伝えてみてください。</div>
+    <div class="code-block">
+      <code style="color:#cdd6f4;font-size:13px;">この動画の内容を文字起こしして
+https://www.youtube.com/watch?v=（動画のURL）</code>
+    </div>
+    <div class="step-desc" style="margin-top:8px;">→ /youtube-transcript スキルが起動し、動画の内容がテキストになって返ってきます。</div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(37,99,235,0.08);color:var(--blue);">STEP 2</span>
+      <span class="rule-title">X（Twitter）で話題を調べてみよう</span>
+    </div>
+    <div class="rule-what">気になるトピックについて、Xのリアルタイムな投稿を調べてもらいましょう。</div>
+    <div class="code-block">
+      <code style="color:#cdd6f4;font-size:13px;">Xで「SNS運用 自動化」について調べて</code>
+    </div>
+    <div class="step-desc" style="margin-top:8px;">→ /x-research スキルが起動し、関連する投稿を検索・整理してくれます。</div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(37,99,235,0.08);color:var(--blue);">STEP 3</span>
+      <span class="rule-title">気になるテーマを深掘り調査してみよう</span>
+    </div>
+    <div class="rule-what">仕事に関連するテーマについて、Web記事＋YouTube＋Xを横断した調査レポートを作ってもらいましょう。</div>
+    <div class="code-block">
+      <code style="color:#cdd6f4;font-size:13px;">「TikTokのアルゴリズム 2026年最新」について深掘り調査して</code>
+    </div>
+    <div class="step-desc" style="margin-top:8px;">→ /deepdive スキルが起動し、複数のソースから情報を集めてHTMLレポートを生成してくれます。</div>
+  </div>
+
+  <div class="alert alert-success" style="margin-top:16px;">
+    <div class="alert-label">ポイント</div>
+    うまくいかなくても大丈夫です。「エラーが出た」「思った結果と違う」と日本語で伝えれば、Claude Codeが対処してくれます。<br>
+    とにかく色々試して、感覚を掴んでいくのが一番の近道です。
+  </div>
+</section>
+
+<!-- Approval Guide -->
+<section id="approval-guide" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:var(--blue);">Y/N</span> 承認を求められた時の判断ガイド</div>
+  <div class="step-desc" style="margin-bottom:16px;">通常モードで使っていると、Claude Codeが「実行しますか？」と確認してきます。YesかNoか迷った時の判断基準です。</div>
+
+  <div class="rule-card" style="border-left:3px solid #059669;">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(5,150,105,0.08);color:#059669;">Yes</span>
+      <span class="rule-title">OKを出してよい場合</span>
+    </div>
+    <div class="rule-what">
+      ・ファイルの読み込み（Read）-- 読むだけなので安全です<br>
+      ・ファイルの検索（Grep, Glob）-- 探すだけなので安全です<br>
+      ・新しいファイルの作成（Write）-- 既存ファイルには影響しません<br>
+      ・Web検索やWebページの取得（WebFetch, WebSearch）-- 調べるだけなので安全です<br>
+      ・git commit -- 変更の保存ポイントを作るだけです
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="rule-card" style="border-left:3px solid #d97706;">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(217,119,6,0.08);color:#d97706;">確認</span>
+      <span class="rule-title">内容を確認してからOKする場合</span>
+    </div>
+    <div class="rule-what">
+      ・ファイルの編集（Edit）-- 何をどう変えるか表示されるので、内容を確認してからOK<br>
+      ・Bashコマンドの実行 -- Claude Codeが「○○するコマンドです」と説明してくれるので、納得できたらOK<br>
+      ・パッケージのインストール -- 何を入れるか確認してからOK
+    </div>
+  </div>
+
+  <div class="step-connector"></div>
+
+  <div class="rule-card" style="border-left:3px solid #dc2626;">
+    <div class="rule-header">
+      <span class="rule-badge security">No</span>
+      <span class="rule-title">止めるべき場合</span>
+    </div>
+    <div class="rule-what">
+      ・APIキーや機密情報を含むコマンドの実行<br>
+      ・rm（削除）コマンド -- 安全ルールでブロックされるはずですが、念のため<br>
+      ・意味が分からない操作 -- 「これ何？」と聞き返せばOK。Claude Codeが日本語で説明してくれます
+    </div>
+  </div>
+</section>
+
+<!-- Troubleshooting -->
+<section id="troubleshooting" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:#dc2626;">?</span> よくあるトラブルと対処法</div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">英語のエラーメッセージが出た</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> そのまま「このエラーは何？どうすればいい？」とClaude Codeに聞いてください。日本語で原因と対処法を説明してくれます。自分で読む必要はありません。</div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">Claude Codeが反応しない・固まった</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> Ctrl + C を押してください。処理が中断されます。もう一度Ctrl + Cを押すと終了します。その後、もう一度 <code style="font-family:var(--mono);font-size:12px;background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;">cd ~/Documents/Claude_Work && claude</code> で再起動すればOKです。</div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">「API key not found」と言われた</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> STEP 2のAPIキー設定がうまくいっていません。ターミナルで以下を実行して、キーが設定されているか確認してください（Claude Codeではなくターミナルで）。<br>
+    <code style="font-family:var(--mono);font-size:12px;background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;">echo $ANTHROPIC_API_KEY</code><br>
+    何も表示されなければ、STEP 3-2をやり直してください。</div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">「command not found: claude」と言われた</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> Claude Codeのインストールがうまくいっていません。STEP 1-3の <code style="font-family:var(--mono);font-size:12px;background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;">npm install -g @anthropic-ai/claude-code</code> をもう一度実行してください。</div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">「command not found: brew」と言われた</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> Homebrewが入っていません。STEP 1-2のコマンドを先に実行してください。</div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">思った結果と違うものが出てきた</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> 「これじゃなくて、○○してほしい」と日本語で伝え直してください。Claude Codeは指示の修正に柔軟に対応します。具体的に「どこが違うか」「どうしてほしいか」を伝えるほど、正確に修正してくれます。</div>
+  </div>
+
+  <div class="rule-card">
+    <div class="rule-header">
+      <span class="rule-badge" style="background:rgba(220,38,38,0.08);color:#dc2626;">Q</span>
+      <span class="rule-title">「トークン75%に達しました」と表示された</span>
+    </div>
+    <div class="rule-what"><strong>対処:</strong> これはエラーではありません。Claude Codeが自動で引き継ぎ書を作ってくれるので、現在のセッションを終了し、新しいセッション（ <code style="font-family:var(--mono);font-size:12px;background:rgba(37,99,235,0.06);padding:2px 6px;border-radius:4px;">claude</code> で再起動）で続きから再開してください。</div>
+  </div>
+</section>
+
+<!-- Support -->
+<section id="support" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:var(--text-sub);">?</span> 困った時は</div>
+
+  <ul class="checklist">
+    <li><span class="check-icon">1</span><span><strong>まずClaude Codeに聞く</strong> -- 「これどうすればいい？」「エラーが出た」と日本語で伝えれば、だいたい解決してくれます</span></li>
+    <li><span class="check-icon">2</span><span><strong>/help を打つ</strong> -- Claude Codeの基本的な使い方が表示されます</span></li>
+    <li><span class="check-icon">3</span><span><strong>RIOに聞く</strong> -- 上の2つで解決しない場合は、RIOに相談してください</span></li>
+  </ul>
+</section>
+
+<!-- Tips -->
+<section id="tips" class="glass-card reveal">
+  <div class="section-title"><span class="section-num" style="background:var(--text-sub);">+</span> 便利なTips</div>
+
+  <ul class="checklist">
+    <li><span class="check-icon">1</span><span><strong>セッションが長くなったら新しく始める</strong> -- Claude Codeが「トークン75%です」と言ったら、自動で引き継ぎ書を作ってくれます。次回はそこから再開できます</span></li>
+    <li><span class="check-icon">2</span><span><strong>フィードバックを伝える</strong> -- 「こうしてほしい」「これは違う」と伝えると、Claude Codeがスキルに学習内容を保存します。次回から同じミスをしなくなります</span></li>
+    <li><span class="check-icon">3</span><span><strong>困ったら聞く</strong> -- 「これ何？」「なぜこうなった？」と聞けば、日本語で分かりやすく説明してくれます</span></li>
+    <li><span class="check-icon">4</span><span><strong>Opusは重要な作業に</strong> -- 調査・設計はOpus、単純作業はSonnetと使い分けるとコスト節約できます。切り替えは /model で</span></li>
+  </ul>
+</section>
+
+</div>
+</div>
+
+<!-- Scripts -->
+<script>
+// Canvas Background (PKSHA-style)
+(function() {
+  var canvas = document.getElementById('line-canvas');
+  var ctx = canvas.getContext('2d');
+  var w, h, lines = [], LINE_COUNT = 18;
+
+  function resize() {
+    w = canvas.width = window.innerWidth;
+    h = canvas.height = window.innerHeight;
+    initLines();
+  }
+  function initLines() {
+    lines = [];
+    for (var i = 0; i < LINE_COUNT; i++) {
+      var pts = [], numPts = 4 + Math.floor(Math.random() * 3);
+      for (var j = 0; j < numPts; j++)
+        pts.push({ x: (j / (numPts - 1)) * w * 1.4 - w * 0.2, baseY: Math.random() * h });
+      lines.push({ pts: pts, opacity: 0.15 + Math.random() * 0.2, width: 0.8 + Math.random() * 1.2 });
+    }
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  var blobs = [
+    { x: 0.7, y: 0.3, r: 0.45, color: [235, 136, 104] },
+    { x: 0.3, y: 0.7, r: 0.50, color: [52, 183, 223] },
+    { x: 0.5, y: 0.2, r: 0.35, color: [52, 183, 223] },
+    { x: 0.8, y: 0.8, r: 0.30, color: [235, 136, 104] }
+  ];
+  var time = 0;
+  function draw() {
+    time += 0.003;
+    ctx.fillStyle = 'rgb(233, 233, 233)';
+    ctx.fillRect(0, 0, w, h);
+    for (var b = 0; b < blobs.length; b++) {
+      var bl = blobs[b];
+      var bx = w * (bl.x + Math.sin(time * 0.4 + b * 2.1) * 0.08);
+      var by = h * (bl.y + Math.cos(time * 0.3 + b * 1.7) * 0.06);
+      var br = Math.max(w, h) * bl.r;
+      var grd = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+      grd.addColorStop(0, 'rgba(' + bl.color.join(',') + ', 0.06)');
+      grd.addColorStop(0.6, 'rgba(' + bl.color.join(',') + ', 0.02)');
+      grd.addColorStop(1, 'rgba(' + bl.color.join(',') + ', 0)');
+      ctx.fillStyle = grd;
+      ctx.fillRect(0, 0, w, h);
+    }
+    for (var i = 0; i < lines.length; i++) {
+      var L = lines[i], pts = L.pts;
+      ctx.beginPath();
+      var y0 = pts[0].baseY + Math.sin(time * 0.5 + i * 1.7) * 40;
+      ctx.moveTo(pts[0].x, y0);
+      for (var j = 1; j < pts.length - 1; j++) {
+        var yj = pts[j].baseY + Math.sin(time * (0.5 + j * 0.2) + i * 1.7) * 40;
+        var yjn = pts[j+1].baseY + Math.sin(time * (0.5 + (j+1) * 0.2) + i * 1.7) * 40;
+        ctx.quadraticCurveTo(pts[j].x, yj, (pts[j].x + pts[j+1].x) / 2, (yj + yjn) / 2);
+      }
+      var last = pts[pts.length - 1];
+      ctx.lineTo(last.x, last.baseY + Math.sin(time * (0.5 + (pts.length-1) * 0.2) + i * 1.7) * 40);
+      ctx.strokeStyle = 'rgba(255, 255, 255, ' + L.opacity + ')';
+      ctx.lineWidth = L.width;
+      ctx.stroke();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// Rule toggle
+function toggleRule(el) {
+  el.classList.toggle('open');
+  var body = el.nextElementSibling;
+  if (body) body.classList.toggle('open');
+}
+
+// Copy button
+function copyCode(btn) {
+  var code = btn.parentElement.querySelector('code').textContent;
+  navigator.clipboard.writeText(code).then(function() {
+    btn.textContent = 'copied!';
+    setTimeout(function() { btn.textContent = 'copy'; }, 1500);
+  });
+}
+
+// Scroll reveal
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(e) {
+    if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
+  });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(function(el) { observer.observe(el); });
+
+// Sidebar tracking
+(function() {
+  var sectionObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var id = entry.target.id;
+        document.querySelectorAll('.sb-link').forEach(function(link) {
+          link.classList.remove('active');
+          if (link.getAttribute('data-section') === id) {
+            link.classList.add('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+  document.querySelectorAll('section[id]').forEach(function(section) {
+    sectionObserver.observe(section);
+  });
+})();
+</script>
+</body>
+</html>
