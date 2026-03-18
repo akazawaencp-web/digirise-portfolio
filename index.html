@@ -97,14 +97,14 @@
     border-bottom:3px solid;border-image:linear-gradient(90deg,#e87a54,#c06dde,#7b5eea,#3db8e0) 1;
   }
   .hero::before {
-    content:'';position:absolute;top:-30%;right:-10%;width:500px;height:500px;
-    background:radial-gradient(circle,rgba(232,122,84,0.1),transparent 65%);border-radius:50%;
+    content:'';position:absolute;top:-60px;right:-60px;width:350px;height:350px;
+    background:radial-gradient(circle,rgba(123,94,234,0.1),transparent 65%);border-radius:50%;
   }
   .hero::after {
-    content:'';position:absolute;bottom:-30%;left:10%;width:400px;height:400px;
-    background:radial-gradient(circle,rgba(123,94,234,0.07),transparent 65%);border-radius:50%;
+    content:'';position:absolute;right:100px;bottom:-80px;width:250px;height:250px;
+    background:radial-gradient(circle,rgba(61,184,224,0.08),transparent 65%);border-radius:50%;
   }
-  .hero-inner { max-width:960px; margin:0 auto; position:relative; z-index:1; }
+  .hero-inner { max-width:720px; margin:0 auto 0 10%; position:relative; z-index:1; }
   .hero-tag {
     display:inline-block; background:linear-gradient(135deg,#e87a54,#c06dde); color:#fff;
     font-size:11px; font-weight:700; letter-spacing:2px; padding:5px 14px;
@@ -296,12 +296,14 @@
 
   /* ===== CLOSING ===== */
   .closing {
-    background:linear-gradient(135deg,var(--dark),var(--dark2));color:white;
-    border-radius:16px;padding:44px 36px;text-align:center;margin-bottom:20px;
+    background:#1a1a2e;color:white;
+    border-radius:16px;padding:44px 48px;text-align:center;margin-bottom:20px;
   }
-  .closing h3 { font-size:20px;font-weight:700;margin-bottom:14px;line-height:1.5; }
-  .closing p { font-size:14px;line-height:1.9;color:rgba(255,255,255,0.75);max-width:600px;margin:0 auto; }
-  .closing strong { color:white; }
+  .closing p { font-size:16px;line-height:1.9;color:rgba(255,255,255,0.6);max-width:600px;margin:0 auto; }
+  .closing-hl {
+    background:linear-gradient(135deg,#f0a080,#6dd3f5);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;font-weight:700;
+  }
 
   /* ===== ACCORDION (Dot + Purple Glow) ===== */
   details {
@@ -330,6 +332,26 @@
   details[open] .open-label { color:var(--text-sub); }
   .details-body { padding:0 24px 24px; }
   .summary-sub { font-size:12px;font-weight:400;color:var(--text-sub);margin-top:2px; }
+
+  /* ===== NESTED ACCORDION (Skill cards inside accordion) ===== */
+  details details {
+    background:var(--white);border-radius:2px 12px 12px 2px;margin-bottom:12px;
+    box-shadow:var(--card-shadow);border-left:4px solid var(--accent);
+  }
+  details details.blue { border-left-color:var(--blue); }
+  details details.green { border-left-color:var(--success); }
+  details details[open] {
+    box-shadow:0 2px 16px rgba(192,109,222,0.12), 0 0 0 1px rgba(192,109,222,0.1);
+  }
+  details details summary {
+    padding:14px 20px;font-size:14px;
+  }
+  details details .details-body { padding:0 20px 20px 36px; }
+  details details .details-body ul li { font-size:13px;line-height:1.8; }
+  details details .details-body ul li strong { font-size:13px; }
+  details details > summary > .open-label { color:#c06dde !important; }
+  details details[open] > summary > .open-label { color:var(--text-sub) !important; }
+  .skill-summary-desc { font-size:12px;font-weight:400;color:var(--text-sub); }
 
   /* ===== MATCH TABLE ===== */
   .match-table { width:100%;border-collapse:separate;border-spacing:0;margin-bottom:16px; }
@@ -379,9 +401,71 @@
     .impact-box,.closing { padding:24px 20px; }
     .skill-grid { grid-template-columns:repeat(2,1fr); }
   }
+
+  /* ===== PRODUCT TIMELINE (課題/解決/効果) ===== */
+  .psk-timeline { position:relative; padding-left:28px; margin:12px 0; }
+  .psk-timeline::before { content:'';position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:var(--border); }
+  .psk-item { position:relative; margin-bottom:16px; }
+  .psk-item:last-child { margin-bottom:0; }
+  .psk-dot { position:absolute;left:-24px;top:4px;width:12px;height:12px;border-radius:50%;border:2px solid var(--white); }
+  .psk-item.kadai .psk-dot { background:#ef4444; }
+  .psk-item.kaiketsu .psk-dot { background:var(--blue); }
+  .psk-item.kouka .psk-dot { background:var(--success); }
+  .psk-label { font-size:12px; font-weight:700; margin-bottom:2px; }
+  .psk-item.kadai .psk-label { color:#ef4444; }
+  .psk-item.kaiketsu .psk-label { color:var(--blue); }
+  .psk-item.kouka .psk-label { color:var(--success); }
+  .psk-text { font-size:14px; line-height:1.7; }
+
+  /* ===== FLOW DIAGRAM ===== */
+  .flow-diagram { display:flex; align-items:center; gap:0; margin:16px 0; flex-wrap:wrap; justify-content:center; }
+  .flow-step {
+    display:flex; align-items:center; justify-content:center; text-align:center;
+    padding:10px 14px; border-radius:10px; font-size:12px; font-weight:600; line-height:1.4;
+    min-width:100px;
+  }
+  .flow-step.line { background:#06C755; color:#fff; }
+  .flow-step.task { background:var(--accent-bg); color:var(--accent); border:1px solid var(--accent); }
+  .flow-step.claude { background:var(--blue-bg); color:var(--blue); border:1px solid var(--blue); }
+  .flow-step.html { background:rgba(124,58,237,0.08); color:#7c3aed; border:1px solid #7c3aed; }
+  .flow-arrow { color:var(--text-sub); font-size:16px; padding:0 6px; flex-shrink:0; }
+  .flow-return {
+    width:100%; display:flex; justify-content:center; align-items:center; gap:6px;
+    margin-top:6px; font-size:11px; color:var(--text-sub); font-weight:600;
+  }
+  .flow-return-line { flex:1; max-width:120px; height:1px; background:var(--border); }
+
+  /* ===== SCREENSHOT TOGGLE ===== */
+  .screenshot-toggle { margin-top:12px;border:none;border-left:none;padding-left:0; }
+  .screenshot-toggle summary {
+    cursor:pointer;font-size:13px;font-weight:600;color:var(--accent);
+    list-style:none;display:inline-flex;align-items:center;gap:6px;
+    padding:6px 16px;border:1.5px solid var(--accent);border-radius:20px;
+    text-decoration:none;transition:all 0.2s;
+  }
+  .screenshot-toggle summary::-webkit-details-marker { display:none; }
+  .screenshot-toggle summary:hover { background:var(--accent-bg); }
+
+  /* ===== LIGHTBOX ===== */
+  .screenshot { cursor:pointer;transition:opacity 0.2s; }
+  .screenshot:hover { opacity:0.85; }
+  .lightbox-overlay {
+    display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;
+    cursor:pointer;
+  }
+  .lightbox-overlay.active { display:flex; }
+  .lightbox-overlay img {
+    max-width:90vw;max-height:90vh;border-radius:8px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.5);object-fit:contain;
+  }
 </style>
 </head>
 <body>
+<!-- Lightbox -->
+<div class="lightbox-overlay" id="lightbox" onclick="this.classList.remove('active')">
+  <img id="lightbox-img" src="" alt="">
+</div>
 
 <canvas id="bg-canvas"></canvas>
 
@@ -405,13 +489,10 @@
   <a class="sb-link active" href="#sec-career"><span class="sb-dot" style="background:#e87a54"></span>キャリア</a>
   <a class="sb-link" href="#sec-why"><span class="sb-dot" style="background:#3db8e0"></span>なぜ応募するか</a>
   <a class="sb-link" href="#sec-match"><span class="sb-dot" style="background:#10b981"></span>要件適合度</a>
-  <a class="sb-link" href="#sec-proposal"><span class="sb-dot" style="background:#c06dde"></span>提案</a>
-  <a class="sb-link" href="#sec-ba"><span class="sb-dot" style="background:#3db8e0"></span>Before / After</a>
+  <a class="sb-link" href="#sec-proposal"><span class="sb-dot" style="background:#c06dde"></span>スキルセット</a>
   <a class="sb-link" href="#sec-products"><span class="sb-dot" style="background:#7b5eea"></span>プロダクト</a>
-  <a class="sb-link" href="#sec-skills"><span class="sb-dot" style="background:#e87a54"></span>Skills + CLAUDE.md</a>
   <hr class="sb-divider">
   <a class="sb-link" href="#sec-conditions"><span class="sb-dot" style="background:#9ca3af"></span>稼働条件</a>
-  <a class="sb-link" href="#sec-questions"><span class="sb-dot" style="background:#9ca3af"></span>質問</a>
 </nav>
 <div class="main">
 <div class="content">
@@ -726,144 +807,156 @@
   </div>
 
 
-  <!-- ===== 1. PROPOSAL ===== -->
+  <!-- ===== 4. PROPOSAL ===== -->
   <div class="section" id="sec-proposal">
     <div class="section-header">
       <div class="section-num">4</div>
-      <h2 class="section-title">デジライズ様への提案 — 人材紹介業界 x Claude Code</h2>
+      <h2 class="section-title">入社後に持ち込める価値 — 6つのスキルセット</h2>
     </div>
 
     <div class="impact-box">
-      <h3>私の最強の武器は「人材紹介会社の痛みが分かる」こと</h3>
+      <h3>Claude Code導入コンサルタントに必要な6つの力を、実務経験の中で全て積み上げてきました</h3>
       <p>
-        Claude Code導入コンサルで最も難しいのは、クライアントの業務課題に対する正確な仮説を立てることです。特に人材紹介業界は、外から見ただけでは痛みの本質が分かりにくい業界です。<br><br>
-        私は9-10年間この業界の中にいて、<strong>トッププレイヤーとして自ら成果を出し、経営者としてオペレーションを設計し、マネジメントとして部下を育ててきました</strong>。業界の中で「何が本当に時間を食っているか」「何がミスの原因になるか」「何を自動化すれば一番インパクトが大きいか」を、実体験から語れます。<br><br>
-        <strong>この解像度は、異業界から来たコンサルタントでは出せません。</strong>そして、私は既にその知見をClaude Codeで実際のプロダクト（CRM 27機能、業界レポート12業界）として形にしています。
+        特定の1つが突出しているのではなく、6つが掛け合わさることで<strong>「クライアントの業務課題を見つけ、Claude Codeで解決し、組織に定着させる」一気通貫の価値</strong>を提供できます。
       </p>
     </div>
 
-    <details>
+    <details open>
       <summary><span class="pulse-dot"></span>
         <div>
-          事業への3つの視点 — 人材紹介業界で経験した構造的課題から
-          <div class="summary-sub">競合優位性の確保、研修とコンサルの違い、非エンジニア向け研修の設計</div>
+          6つのスキルセット
+          <div class="summary-sub">各スキルをクリックすると詳細が開きます</div>
         </div>
       <span class="open-label">OPEN</span></summary>
       <div class="details-body">
-        <div class="card blue" style="margin-top:4px;">
-          <div class="card-title">視点 1 — 「広く浅く」から「深く狭く」への転換点</div>
-          <p style="margin-bottom:12px">人材紹介業界では、総合型エージェントが専門エージェントにリプレイスされる現象が起きます。クライアントが求めているのは「AIツールの使い方」ではなく「自分の業務の痛みを理解した上での解決策」だからです。</p>
-          <p style="margin-bottom:12px">Claude Codeコンサル事業でも、今後競合が出てきた時に同じ構造の課題が生まれます。差別化の鍵は<strong>「クライアントのインサイトをどこまで深く理解し、期待以上の成果物を納品できるか」</strong>。</p>
-          <p><strong>私が人材紹介業界という「深い領域」を持ち込めることは、幅広さと深さの両立への第一歩になると考えています。</strong></p>
-        </div>
-        <div class="card">
-          <div class="card-title">視点 2 — 「研修」と「コンサル」は別の筋肉</div>
-          <p style="margin-bottom:12px">研修は「型を教える」仕事、コンサルは「課題を特定して解決策を設計する」仕事。人材紹介でいうと「求人紹介だけのエージェント」と「キャリア設計から入るエージェント」の違いです。<strong>クライアントが本当に価値を感じるのは後者</strong>です。</p>
-          <p>Claude Codeコンサルを「業務課題の特定→解決策設計→導入→定着」の一気通貫サービスとして位置づけることで、競合との差別化と単価の向上が可能になるのではないかと考えています。</p>
-        </div>
-        <div class="card green">
-          <div class="card-title">視点 3 — 非エンジニアに教えるなら、非エンジニアが一番分かっている</div>
-          <p style="margin-bottom:12px">クライアントの大半は非エンジニア。エンジニアが教えると<strong>「どこでつまずくか」が見えない</strong>構造的ギャップが生まれます。</p>
-          <p>私はプログラミング経験ゼロから始めた「つまずきポイントの地図」を持っています。これは意図して作れるものではなく、<strong>自分が実際にその道を通ったからこそ持てるもの</strong>です。</p>
-        </div>
+
+        <!-- Skill 1 -->
+        <details class="blue" style="margin-top:4px;">
+          <summary>
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>1. Claude Code実践力</strong>
+              <div class="skill-summary-desc">1日7時間以上、1.5ヶ月間毎日使い倒す。Skills 16種類、CLAUDE.md 2層設計、複数プロダクト構築済み</div>
+            </div>
+          <span class="open-label">OPEN</span></summary>
+          <div class="details-body">
+            <ul>
+              <li><strong>Skills 16種類を自作・運用</strong><br>企業調査、業界レポート生成、退職理由リサーチ、X検索、YouTube字幕抽出、コピーライティングなど、業務に直結するスキルを設計</li>
+              <li><strong>CLAUDE.md 2層設計</strong><br>セキュリティの多層防御（予防→検知→遮断）、セッション継続のHANDOVER機構、非エンジニア向けUXルールを自ら設計</li>
+              <li><strong>MCP連携・Hooks設計</strong><br>Notion連携、外部スキルの安全インストール機構、コンテキスト保護の自動リマインドなど、安全かつ実用的な環境を構築</li>
+              <li><strong>複数のプロダクトを構築済み</strong><br>CRM 27機能、業界レポート12業界、LINEタスク管理システムなど。全て「提案」ではなく「実物」</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- Skill 2 -->
+        <details>
+          <summary>
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>2. 業界・業務理解力</strong>
+              <div class="skill-summary-desc">人材紹介業界9-10年。現場（CA）・マネジメント・経営の全レイヤーを経験</div>
+            </div>
+          <span class="open-label">OPEN</span></summary>
+          <div class="details-body">
+            <ul>
+              <li><strong>人材紹介業界の「深さ」</strong><br>外から見えない時間泥棒（スカウト、職務経歴書作成、面接対策資料、模擬面接）を知っている。初回面談での信頼獲得→意向獲得がCAの決定率と売上に直結し、ここが属人的になることが最大の課題だと体感で理解している</li>
+              <li><strong>12業界以上の「広さ」</strong><br>各業界に在籍する求職者から業務内容を細かくヒアリングし、転職支援の対策を重ねてきた中で、業界ごとの業務プロセス・課題パターンを把握。業務を可視化してボトルネックを特定するアプローチはどの業界にも応用可能</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- Skill 3 -->
+        <details class="green">
+          <summary>
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>3. 法人コンサルティング力</strong>
+              <div class="skill-summary-desc">課題特定→提案の型。経営者・役員クラスとの折衝経験。業務課題とClaude Codeをつなぐ翻訳力</div>
+            </div>
+          <span class="open-label">OPEN</span></summary>
+          <div class="details-body">
+            <ul>
+              <li><strong>思考の型</strong><br>ゴール設定→現状整理→ギャップ特定→インパクト順に優先度付け→施策設計。経営時代に徹底的に鍛えられた</li>
+              <li><strong>経営者・役員クラスとの折衝経験</strong><br>上場企業の役員、未上場企業の経営者との採用戦略MTG・会食の経験。採用課題の相談が直接入るレベルの信頼関係</li>
+              <li><strong>課題をClaude Codeで解ける形に翻訳する力</strong><br>「スカウト返信率が低い」→「パーソナライズ文面のSkills自動化」。業務課題と技術をつなぐ翻訳ができる</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- Skill 4 -->
+        <details class="blue">
+          <summary>
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>4. 研修・教育設計力</strong>
+              <div class="skill-summary-desc">400-500名への1対1指導。相手のレベルに合わせたブレイクダウン。教えた2名がギネス記録更新中</div>
+            </div>
+          <span class="open-label">OPEN</span></summary>
+          <div class="details-body">
+            <ul>
+              <li><strong>相手のレベルに合わせたブレイクダウン</strong><br>「理解していないことを理解していない」「理解していないと思われるのが恥ずかしくて聞けない」を前提に、徹底的に噛み砕く。重要ポイントは何度でも伝える</li>
+              <li><strong>教えた成果が数字で出ている</strong><br>退職直前に指導した2名（2025年7月入社）が社内ギネス記録を更新中</li>
+              <li><strong>Claude Code指導で分かった「2つの壁」</strong><br>①自動化する対象が目の前にない人（オーバースペック問題）②問いの精度がない人（ゴール↔現状のギャップを埋める質問が出てこない）。だからこそ、問いの設計力がある人間がコンサルとして入る必要がある</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- Skill 5 -->
+        <details>
+          <summary>
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>5. オペレーション・仕組み化力</strong>
+              <div class="skill-summary-desc">11名組織をゼロから構築。属人的な業務を仕組みに変えてきた経験</div>
+            </div>
+          <span class="open-label">OPEN</span></summary>
+          <div class="details-body">
+            <ul>
+              <li><strong>立ち上げの順番を知っている</strong><br>まず自分がトップセールスになる→ノウハウを仕組み化→採用→展開。売上＝支援者数×決定率×単価に分解し、各変数を構造的に改善</li>
+              <li><strong>仕組み化の判断基準が明確</strong><br>最優先は「思考不要×繰り返し作業」、次に「思考必要だがAI代替可能×繰り返し作業」。闇雲に自動化しない</li>
+              <li><strong>CRM 27機能の洗い出し方</strong><br>全業務プロセスを細かく分解→各ステップで改善できることを洗い出し→Claude Codeに120個のアイデアを出させ→選定して研ぎ澄ます。クライアント先でもこの手法がそのまま使える</li>
+            </ul>
+          </div>
+        </details>
+
+        <!-- Skill 6 -->
+        <details class="green">
+          <summary>
+            <span class="pulse-dot"></span>
+            <div>
+              <strong>6. 導入して終わりにしない力</strong>
+              <div class="skill-summary-desc">新しい仕組みを組織に定着させる。合意形成→定着の仕掛け→業務プロセス変革</div>
+            </div>
+          <span class="open-label">OPEN</span></summary>
+          <div class="details-body">
+            <ul>
+              <li><strong>合意形成の型</strong><br>ゴール設定→双方で合意→合意した上で「なぜやらないのか」を問える土台を作る。一方的に押し付けない</li>
+              <li><strong>定着の仕掛け</strong><br>使わせてフィードバックをもらう / ゲーム形式で競争と報酬 / エースに「周りを動かす」役割を渡して巻き込む</li>
+              <li><strong>「研修後に使われない」を防ぐ方法</strong><br>経営者だけでなく現場と一緒に作る（上の自己満で終わらせない）。それでも使わない人には「使わざるを得ない業務プロセス」に変える</li>
+            </ul>
+          </div>
+        </details>
+
       </div>
     </details>
 
-    <details>
-      <summary><span class="pulse-dot"></span>
-        <div>
-          人材紹介会社に提案できる具体的な業務効率化 6選
-          <div class="summary-sub">スカウト自動生成、業界レポート、選考管理、議事録チェーン、AI模擬面接、ヨミ表</div>
-        </div>
-      <span class="open-label">OPEN</span></summary>
-      <div class="details-body">
-        <div class="card" style="margin-top:4px;">
-          <ul>
-            <li><strong>スカウト文面の自動生成</strong> — ビズリーチ返信率2.5-3%の高返信率テンプレートをベースに、候補者プロフィールに合わせたパーソナライズ文面を一括生成</li>
-            <li><strong>業界レポートの即時生成</strong> — 面談前に1コマンドで業界の退職理由・心理的背景・切り返しトークを自動調査。面談の質を劇的に向上</li>
-            <li><strong>選考管理の自動化</strong> — 停滞案件の自動検知、日程調整の自動化、アラート13種類で漏れをゼロに</li>
-            <li><strong>議事録→職務経歴書→推薦文の自動生成チェーン</strong> — 面談録音から議事録→職務経歴書ドラフト→推薦文を自動生成。CAの作業時間を大幅削減</li>
-            <li><strong>AI模擬面接</strong> — 音声ベースの面接練習+AIフィードバック。将来的にはビデオ版で表情分析・フィラー検出まで</li>
-            <li><strong>ヨミ表（売上予測）のリアルタイム管理</strong> — スプレッドシートから脱却し、期待値粗利の自動計算・グラフ化</li>
-          </ul>
-        </div>
-      </div>
-    </details>
-
-    <details>
-      <summary><span class="pulse-dot"></span>
-        <div>
-          なぜ私がこの提案をできるのか — 実績・設計力・希少性
-          <div class="summary-sub">トッププレイヤー実績、経営者視点のオペレーション設計、3要素の構造的希少性</div>
-        </div>
-      <span class="open-label">OPEN</span></summary>
-      <div class="details-body">
-        <div class="card blue" style="margin-top:4px;">
-          <div class="card-title">3つの根拠</div>
-          <ul>
-            <li><strong>トッププレイヤーとしての実績</strong> — Q粗利3,000万円。M&A Capital Partners支援実績で全国の全エージェント中No.1（2024年度）。何が成果に直結するかを体感で知っている</li>
-            <li><strong>経営者としてのオペレーション設計</strong> — 11名組織をゼロから設計。「インパクトが大きいところから」の優先度判断を経営者目線で</li>
-            <li><strong>既にプロダクトとして形にしている</strong> — CRM 27機能、業界レポート12業界は「提案」ではなく「実物」</li>
-          </ul>
-        </div>
-        <div class="card green">
-          <div class="card-title">構造的に希少な組み合わせ</div>
-          <p style="margin-bottom:10px">Claude Code導入コンサルに必要な3要素:</p>
-          <ul>
-            <li><strong>業務課題を理解する力</strong> — 業界知見 + 法人営業経験</li>
-            <li><strong>Claude Codeを使い倒している実績</strong> — Skills / MCP / CLAUDE.md設計</li>
-            <li><strong>相手に合わせて教える力</strong> — 400-500名の1対1指導 + マネジメント</li>
-          </ul>
-          <p style="margin-top:10px">この3つが揃うのは、9-10年間業界の中で成果を出し、経営とマネジメントを経験し、Claude Codeで事業を再構築した、というキャリアの必然です。</p>
-        </div>
-      </div>
-    </details>
 
     <div class="highlight">
-      <p>人材紹介業界が最もクリティカルに価値を出せる領域ですが、それだけではありません。CAとして12業界以上の営業プロセスを理解しており、「業務全体を可視化→インパクトが大きい自動化ポイントを特定」するアプローチは業界を問わず応用可能です。M&A仲介、IT SaaS、コンサルファーム、Webマーケ等、多業種のクライアントに対しても同様の価値を提供できると考えています。</p>
+      <p>人材紹介が最も深い領域ですが、CAとして12業界以上に在籍していた求職者の業務プロセスを細かくヒアリングし対策してきた経験から、各業界における業務理解のスピードは一般と比較しても早いと考えています。「業務全体を可視化→インパクトが大きい自動化ポイントを特定」するアプローチは業界を問わず応用可能です。</p>
     </div>
   </div>
 
 
-  <!-- ===== 2. BEFORE/AFTER ===== -->
-  <div class="section" id="sec-ba">
-    <div class="section-header">
-      <div class="section-num">5</div>
-      <h2 class="section-title">Before / After — クライアントにも再現可能な変化</h2>
-    </div>
-
-    <div class="ba-grid">
-      <div class="ba-col before">
-        <div class="ba-label">2025年11月（前職退任時）</div>
-        <div class="ba-item">プログラミング経験ゼロ</div>
-        <div class="ba-item">業務ツールはスプレッドシート中心</div>
-        <div class="ba-item">業界レポート・候補者資料は全て手作業</div>
-        <div class="ba-item">タスク管理は紙とLINEメモ</div>
-        <div class="ba-item">AI活用はChatGPTでの文章生成程度</div>
-      </div>
-      <div class="ba-arrow">&rarr;</div>
-      <div class="ba-col after">
-        <div class="ba-label">2026年3月（Claude Code導入1.5ヶ月後）</div>
-        <div class="ba-item">CRM（27機能設計）を自力で構築中</div>
-        <div class="ba-item">業界レポートは1コマンドで12業界分を自動生成</div>
-        <div class="ba-item">LINE AIがタスクを追跡し、深掘り調査まで自動実行</div>
-        <div class="ba-item">CLAUDE.md 2層設計 + Skills 10種類以上を運用</div>
-        <div class="ba-item">Notion MCP連携でデータベースを直接操作</div>
-      </div>
-    </div>
-
-    <div class="highlight">
-      <p>この変化は私個人の話ではなく、クライアント企業にも再現可能です。非エンジニアの経営者・事業責任者が、CLAUDE.mdとSkillsの設計次第で業務を劇的に変えられるという実証データ。例えば業界レポートは手作業で半日以上 → 自動生成で数分。この「自分が実験台になった結果」をコンサルの説得材料としてそのまま使えます。</p>
-    </div>
-  </div>
-
-
-  <!-- ===== 3. PRODUCTS ===== -->
+  <!-- ===== 5. PRODUCTS ===== -->
   <div class="section" id="sec-products">
     <div class="section-header">
-      <div class="section-num">6</div>
-      <h2 class="section-title">構築したプロダクト — コンサルの説得材料そのもの</h2>
+      <div class="section-num">5</div>
+      <h2 class="section-title">構築したプロダクト</h2>
     </div>
+
+    <p style="font-size:14px;color:var(--text);margin-bottom:12px;">プログラミング経験ゼロ・Claude Code導入1.5ヶ月で、以下を全て構築しました。</p>
+    <p style="font-size:12px;color:var(--text-sub);margin-bottom:16px;">※ スクリーンショット内の氏名・企業名・数値は全てダミーデータです。</p>
 
     <details open>
       <summary><span class="pulse-dot"></span>
@@ -875,33 +968,51 @@
       <div class="details-body">
     <!-- CRM -->
     <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
-      <div class="product-card-img">
-        <!-- RIO: ここにCRMのスクショを挿入 -->
-        スクリーンショット挿入エリア
-      </div>
       <div class="product-card-body">
         <div>
           <span class="product-tag wip">構築中（コア機能実装済み）</span>
         </div>
         <h4>人材紹介CRM — 全業務の自動化基盤</h4>
-        <div class="product-sub">Next.js + Supabase + Vercel + shadcn/ui</div>
-        <p style="margin-bottom:12px">
-          <strong>課題:</strong> 人材紹介業務の管理がスプレッドシートに散在。候補者情報、選考進捗、売上予測、タスクがバラバラで、管理コストが高くミスも発生しやすい。<br>
-          <strong>解決:</strong> 候補者管理・選考管理・ヨミ表（売上予測）・タスク管理を一元化するCRMをClaude Codeで設計・実装。セキュリティを最重要設計方針として組み込み。<br>
-          <strong>効果:</strong> 全業務を1つのシステムから操作可能に。ヨミ表はリアルタイムで期待値粗利を自動計算。選考管理はフェーズ別のビジュアル管理で停滞案件を即座に検知。
-        </p>
+        <div class="product-sub">Next.js + Supabase + Radix UI + Recharts + @dnd-kit / Anthropic SDK連携</div>
+        <div class="psk-timeline">
+          <div class="psk-item kadai"><div class="psk-dot"></div><div class="psk-label">課題</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>候補者情報・選考進捗・売上予測・タスクがスプレッドシートに散在</li>
+              <li>管理コストが高く、対応漏れ・数値ミスが発生しやすい</li>
+              <li>ヨミ（売上見込み）を手計算で管理しており、精度と速度に限界がある</li>
+            </ul>
+          </div></div>
+          <div class="psk-item kaiketsu"><div class="psk-dot"></div><div class="psk-label">解決</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>候補者管理・選考管理・ヨミ表・タスク管理を1つのCRMに集約。ツール間の行き来がゼロに</li>
+              <li>ヨミ表がリアルタイムで期待値粗利を自動計算</li>
+              <li>選考管理はフェーズ別ビジュアルで停滞案件を即座に検知</li>
+            </ul>
+          </div></div>
+        </div>
       </div>
     </div>
+
+    <details class="screenshot-toggle">
+      <summary>スクリーンショットを見る</summary>
+      <div style="display:flex;gap:12px;margin-top:12px;margin-bottom:8px;">
+        <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/crm-dashboard.png" alt="CRM ダッシュボード画面" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+        <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/crm-pipeline.png" alt="CRM 選考管理画面" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:8px;">
+        <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/crm-yomi.png" alt="CRM ヨミ表" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+      </div>
+    </details>
 
     <div class="feature-cols">
       <div class="feature-group">
         <h5>実装済み・設計確定</h5>
         <ul>
-          <li>ヨミ表（売上予測 / 22列 / 6段階の読みレベル）</li>
-          <li>選考管理（フェーズ別ビジュアル / 停滞検知）</li>
+          <li>ダッシュボード（停滞アラート・今日の面接・売上予測・コンバージョンファネル・Q実績）</li>
+          <li>選考管理（15ステップのフェーズ別ビジュアル / アクション詳細 / 停滞検知）</li>
+          <li>ヨミ表（売上予測 / 22列 / 高め・中・低め・ウルトラCの4段階 / 期待値粗利自動計算）</li>
           <li>候補者管理（プロフィール・経歴登録）</li>
-          <li>タスク管理（全タスク対応）</li>
-          <li>ダッシュボード（KPI可視化）</li>
+          <li>企業管理・求人管理</li>
           <li>DB設計 10テーブル + RLSセキュリティ</li>
         </ul>
       </div>
@@ -933,21 +1044,56 @@
       <span class="open-label">OPEN</span></summary>
       <div class="details-body">
     <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
-      <div class="product-card-img">
-        <!-- RIO: ここにLINE簡単タスク管理システムのスクショを挿入 -->
-        スクリーンショット挿入エリア
-      </div>
       <div class="product-card-body">
         <div>
           <span class="product-tag done">稼働中</span>
         </div>
         <h4>LINE簡単タスク管理システム — LINE AIタスク管理</h4>
         <div class="product-sub">FastAPI + LINE Messaging API + Claude API + Google Tasks API / Railway</div>
-        <p>
-          <strong>課題:</strong> ADHD特性があり、カレンダーやタスクアプリを開く行為自体が続かない。タスクが漏れ、調べ物も億劫で後回しになる。<br>
-          <strong>解決:</strong> LINEに話しかけるだけでタスク登録。AIが毎朝リマインドし、完了するまで追いかける。さらに「deepdive」スキルと連携し、タスクに必要な情報をWeb検索+YouTube字幕取得で自動調査、HTMLレポートを生成してRailwayに配信。<br>
-          <strong>効果:</strong> タスク漏れがゼロに。調査の心理的ハードルが消え、「とりあえずLINEに投げれば、翌朝には調査レポートが届いている」状態を実現。ビジュアルが良いのでやる気も持続。
-        </p>
+        <div class="psk-timeline">
+          <div class="psk-item kadai"><div class="psk-dot"></div><div class="psk-label">課題</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>ADHD特性があり、カレンダーやタスクアプリを「開く行為自体」が続かない</li>
+              <li>タスクを登録できても、調べ物が億劫で着手のハードルが高い</li>
+              <li>AI・技術の最新情報（X等）を漏らさずキャッチし続けるのが難しい</li>
+            </ul>
+          </div></div>
+          <div class="psk-item kaiketsu"><div class="psk-dot"></div><div class="psk-label">解決</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>LINEに話しかけるだけでタスク登録。AIが毎朝リマインドし、完了するまで追いかけるのでタスク漏れがゼロに</li>
+              <li>「deepdive」スキル連携で自動調査→HTMLレポート生成。事前知識がインプットされた状態でタスクに着手できる</li>
+              <li>Xの最新情報もLINE経由で自動調査。そのHTMLをClaude Codeに渡して「実装すべきか否か」の判断まで即座に実行</li>
+            </ul>
+          </div></div>
+        </div>
+
+        <div style="font-size:12px;font-weight:700;color:var(--text-sub);letter-spacing:0.1em;margin-bottom:8px;">SYSTEM FLOW</div>
+        <div class="flow-diagram">
+          <div class="flow-step line">LINE<br>タスク投入</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step task">Task Dashboard<br>登録・管理</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step claude">Claude Code<br>deepdive調査</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step html">HTMLレポート<br>Railway配信</div>
+        </div>
+        <div class="flow-return">
+          <div class="flow-return-line"></div>
+          ← レポートURLをLINEに自動通知
+          <div class="flow-return-line"></div>
+        </div>
+
+        <details class="screenshot-toggle">
+          <summary>スクリーンショットを見る</summary>
+          <div style="display:flex;gap:12px;margin-top:12px;margin-bottom:8px;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/line-task.png" alt="LINEタスク管理システム" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/task-dashboard.png" alt="タスクダッシュボード" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:8px;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/deepdive-report.png" alt="deepdive調査レポート" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+          </div>
+        </details>
+        <a href="https://web-production-5d00d.up.railway.app/reports/rpt-M30L34Ljr8o.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border:1.5px solid var(--accent);border-radius:20px;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.2s;">deepdive調査レポートのサンプルを見る →</a>
       </div>
     </div>
       </div>
@@ -962,22 +1108,36 @@
       <span class="open-label">OPEN</span></summary>
       <div class="details-body">
     <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
-      <div class="product-card-img">
-        <!-- RIO: ここに業界レポートのスクショを挿入 -->
-        スクリーンショット挿入エリア
-      </div>
       <div class="product-card-body">
         <div>
           <span class="product-tag done">12業界完成</span>
         </div>
         <h4>業界レポート自動生成システム</h4>
         <div class="product-sub">Claude Code Skill（industry-report-html）/ Web検索 + YouTube字幕取得</div>
-        <p>
-          <strong>課題:</strong> キャリアアドバイザーとして業界知識のインプットは必須だが、1業界あたり半日以上かかる。面談中にすぐ参照できる資料もなかった。<br>
-          <strong>解決:</strong> 1コマンドで業界の退職理由・心理的背景・切り返しトークを自動調査・HTML生成するSkillを構築。30-40件以上のWeb検索+YouTube字幕抽出で徹底的に情報を収集。面談中にチラ見できるビジュアルHTMLレポートを自動生成。<br>
-          <strong>効果:</strong> 12業界分のレポートを量産。面談の質が向上し、候補者の「この人は自分の業界を理解している」という信頼感の獲得が早まった。
-        </p>
-        <p style="margin-top:8px;font-size:12px;color:var(--blue);"><!-- RIO: サンプルURLがあれば追記 → <a href="URL">実際のレポートサンプルを見る</a> --></p>
+        <div class="psk-timeline">
+          <div class="psk-item kadai"><div class="psk-dot"></div><div class="psk-label">課題</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>業界知識のインプットは必須だが、1業界あたり膨大な時間がかかる</li>
+              <li>候補者の退職理由に対する仮説・インサイトの質がアドバイザー個人の経験に依存し、属人的</li>
+              <li>面談中にすぐ参照できる体系的な資料がなかった</li>
+            </ul>
+          </div></div>
+          <div class="psk-item kaiketsu"><div class="psk-dot"></div><div class="psk-label">解決</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>1コマンドで退職理由・心理的背景・切り返しトークを自動調査→ビジュアルHTMLレポートを生成</li>
+              <li>30-40件以上のWeb検索+YouTube字幕抽出で網羅的に情報収集。12業界分を量産済み</li>
+              <li>属人的だったインサイトを仕組み化。誰が使っても同じ精度のレポートが出る再現性を確保</li>
+              <li>面談中にチラ見できるので「この人は業界を分かっている」という信頼感の獲得が早まった</li>
+            </ul>
+          </div></div>
+        </div>
+        <details class="screenshot-toggle">
+          <summary>スクリーンショットを見る</summary>
+          <div style="display:flex;gap:12px;margin-top:12px;margin-bottom:8px;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/industry-report.png" alt="業界レポート" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+          </div>
+        </details>
+        <a href="reports/securities-retail.html" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border:1.5px solid var(--accent);border-radius:20px;color:var(--accent);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.2s;">証券リテール営業レポートのサンプルを見る →</a>
       </div>
     </div>
       </div>
@@ -986,22 +1146,43 @@
     <details>
       <summary><span class="pulse-dot"></span>
         <div>
-          SNS自動投稿プラットフォーム
-          <div class="summary-sub">構築中 / Streamlit + Claude API / コンテンツ自動生成+スケジュール管理</div>
+          SNSショート動画 台本自動生成システム
+          <div class="summary-sub">構築中 / Streamlit + Claude API / 戦略設計→台本→ナレーション→スライド演出→Midjourneyプロンプトまで一括生成</div>
         </div>
       <span class="open-label">OPEN</span></summary>
       <div class="details-body">
     <div class="product-card" style="box-shadow:none;border:none;margin-bottom:0;">
-      <div class="product-card-img">
-        <!-- RIO: ここにSNS自動化のスクショを挿入 -->
-        スクリーンショット挿入エリア
-      </div>
       <div class="product-card-body">
-        <p>
-          <strong>課題:</strong> 集客のためにSNS発信が必要だが、コンテンツ作成に時間がかかり後回しになる。<br>
-          <strong>解決:</strong> Claude APIでコンテンツを自動生成し、Google Sheetsでスケジュール管理。Streamlit UIから一括操作。<br>
-          <strong>効果:</strong> コンテンツ作成の時間を削減し、発信の継続性を確保。
-        </p>
+        <div>
+          <span class="product-tag wip">構築中</span>
+        </div>
+        <h4>SNSショート動画 台本自動生成システム</h4>
+        <div class="product-sub">Streamlit + Claude API + Midjourney連携</div>
+        <div class="psk-timeline">
+          <div class="psk-item kadai"><div class="psk-dot"></div><div class="psk-label">課題</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>ショート動画1本の制作に「構成→ナレーション→映像演出→画像生成プロンプト」と工程が多い</li>
+              <li>1本あたりの制作コストが高く、発信が止まりやすい</li>
+            </ul>
+          </div></div>
+          <div class="psk-item kaiketsu"><div class="psk-dot"></div><div class="psk-label">解決</div><div class="psk-text">
+            <ul style="margin:0;padding-left:18px;">
+              <li>戦略設計→企画→台本→映像演出→Midjourneyプロンプトまで一気通貫で自動生成</li>
+              <li>品質チェックで文字数・尺の超過を自動検知。フィードバック機能でチーム内レビューも完結</li>
+              <li>「企画を入れれば、撮影・編集に必要な素材が全て揃う」状態を実現</li>
+            </ul>
+          </div></div>
+        </div>
+        <details class="screenshot-toggle">
+          <summary>スクリーンショットを見る</summary>
+          <div style="display:flex;gap:12px;margin-top:12px;margin-bottom:8px;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/sns-dashboard.png" alt="SNSダッシュボード" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/sns-content.png" alt="コンテンツ量産画面" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+          </div>
+          <div style="display:flex;gap:12px;margin-bottom:8px;">
+            <img class="screenshot" onclick="document.getElementById('lightbox-img').src=this.src;document.getElementById('lightbox').classList.add('active')" src="images/sns-script.png" alt="台本詳細・Midjourneyプロンプト" style="width:calc(50% - 6px);border-radius:8px;border:1px solid var(--border);object-fit:contain;">
+          </div>
+        </details>
       </div>
     </div>
       </div>
@@ -1009,115 +1190,10 @@
   </div>
 
 
-  <!-- ===== 4. SKILLS + CLAUDE.md ===== -->
-  <div class="section" id="sec-skills">
-    <div class="section-header">
-      <div class="section-num">7</div>
-      <h2 class="section-title">Skills + CLAUDE.md設計 — クライアント環境に展開可能</h2>
-    </div>
-
-    <details>
-      <summary><span class="pulse-dot"></span>
-        <div>
-          セキュリティ設計思想 + CLAUDE.md抜粋
-          <div class="summary-sub">会社経営で培ったリスク管理をCLAUDE.mdに反映</div>
-        </div>
-      <span class="open-label">OPEN</span></summary>
-      <div class="details-body">
-    <div class="card" style="margin-top:4px;">
-      <div class="card-title">セキュリティ設計思想 — 会社経営で培ったリスク管理の延長線</div>
-      <p style="margin-bottom:12px">前職で11名の組織を経営する中で、情報漏洩リスク・セキュリティ管理は常に最優先事項でした。人材紹介業は個人情報の塊であり、一度の漏洩で事業が終わります。その経験をCLAUDE.mdのセキュリティポリシーにそのまま反映しています。</p>
-      <ul>
-        <li><strong>APIキー・機密情報はClaude Codeに絶対渡さない</strong> — .env管理、.claudeignore設置、環境変数一覧コマンドの実行禁止</li>
-        <li><strong>スクリーンショット内の機密情報を自動検知</strong> — 映り込みに即座に警告し再発行を推奨</li>
-        <li><strong>個人情報の匿名化ルール</strong> — 候補者の実名・年齢・勤務先は全て匿名化してからClaude Codeに渡す運用を徹底</li>
-        <li><strong>既存ファイルの保護</strong> — 上書き前の確認必須、削除コマンドの原則禁止</li>
-      </ul>
-      <p style="margin-top:12px">このセキュリティポリシーの設計ノウハウは、そのまま法人クライアントのClaude Code導入時に展開できます。</p>
-    </div>
-
-    <div class="code-block">
-      <div class="code-label">CLAUDE.md — セキュリティポリシー抜粋</div>
-      <pre><span class="cm"># 機密情報の予防・検知</span>
-
-<span class="k">予防（そもそも渡させない）:</span>
-  <span class="v">APIキーの設定場面 → 「.envに自身で貼ってください」と案内</span>
-  <span class="v">printenv / env / set → 絶対に実行しない</span>
-  <span class="v">新サービス導入時 → 先回りで「キーは私に見せないで」と案内</span>
-
-<span class="k">検知（渡してしまった時の即時警告）:</span>
-  <span class="v">スクリーンショットに機密情報 → 即警告 + 再発行推奨</span>
-  <span class="v">会話内にキー貼付 → 同様に警告</span>
-
-<span class="cm"># トークン自己監視 — セッション間の作業引き継ぎを仕組み化</span>
-
-<span class="k">75%到達:</span> <span class="v">HANDOVER.md自動生成 → セッション終了推奨</span>
-<span class="k">90%到達:</span> <span class="v">作業一時停止 → ユーザーの指示を待つ</span>
-<span class="k">大タスク前:</span> <span class="v">未保存のフィードバック・進捗を自動保存</span></pre>
-    </div>
-      </div>
-    </details>
-
-    <details>
-      <summary><span class="pulse-dot"></span>
-        <div>
-          自作Skills一覧 — 9種類+MCP連携
-          <div class="summary-sub">deepdive、industry-report、x-research、company-research 他。全て実務で稼働中</div>
-        </div>
-      <span class="open-label">OPEN</span></summary>
-      <div class="details-body">
-    <div class="skill-grid" style="margin-top:4px;">
-      <div class="skill-item">
-        <h5>deepdive</h5>
-        <p>タスクをWeb検索+YouTube字幕で徹底調査し、HTMLレポートを自動生成・配信</p>
-      </div>
-      <div class="skill-item">
-        <h5>industry-report-html</h5>
-        <p>業界別退職理由レポートを1コマンドで生成。12業界分を構築済み</p>
-      </div>
-      <div class="skill-item">
-        <h5>x-research</h5>
-        <p>Grok APIでX投稿をリアルタイム検索。海外のClaude Code最新情報も自動収集</p>
-      </div>
-      <div class="skill-item">
-        <h5>company-research</h5>
-        <p>企業の市場価値向上ポテンシャルを分析。30-40件以上のWeb+YouTube調査</p>
-      </div>
-      <div class="skill-item">
-        <h5>legal-risk-card</h5>
-        <p>法的リスクのQ&A・解決策・弁護士質問スクリプトを自動生成</p>
-      </div>
-      <div class="skill-item">
-        <h5>youtube-transcript</h5>
-        <p>YouTube動画から字幕を抽出。リサーチの情報源として各スキルと連携</p>
-      </div>
-      <div class="skill-item">
-        <h5>frontend-design</h5>
-        <p>プロダクションレベルのUI/HTMLを生成。LP、ダッシュボード等</p>
-      </div>
-      <div class="skill-item">
-        <h5>copywriting</h5>
-        <p>行動科学を応用したマーケティングコピーの作成・編集</p>
-      </div>
-      <div class="skill-item">
-        <h5>Notion MCP連携</h5>
-        <p>NotionデータベースをClaude Codeから直接操作。ナレッジベースの自動化</p>
-      </div>
-    </div>
-
-      </div>
-    </details>
-
-    <div class="highlight">
-      <p>これらのSkillsとCLAUDE.mdの設計は、自分の環境だけで完結するものではありません。クライアント企業の業種・業務に合わせてカスタマイズしたCLAUDE.md/Skillsテンプレートを設計し、「導入して終わり」ではなく「定着して業務が変わる」状態まで伴走する。これがコンサルとして提供する価値です。</p>
-    </div>
-  </div>
-
-
-  <!-- ===== 8. CONDITIONS ===== -->
+  <!-- ===== 6. CONDITIONS ===== -->
   <div class="section" id="sec-conditions">
     <div class="section-header">
-      <div class="section-num">8</div>
+      <div class="section-num">6</div>
       <h2 class="section-title">稼働条件</h2>
     </div>
 
@@ -1128,11 +1204,11 @@
       </div>
       <div class="condition-item">
         <h5>稼働日数</h5>
-        <p>週3日のオフィス出社（浜松町）に対応可能。プロジェクト状況に応じて柔軟に</p>
+        <p>オフィス出社も含め柔軟に対応可能です。詳細は面談でご相談させてください</p>
       </div>
       <div class="condition-item">
         <h5>雇用形態</h5>
-        <p>業務委託を希望。報酬は成果に応じた形で柔軟にご相談させてください。前職の株式売却により当面の金銭的余裕があるため、報酬よりも機会を重視しています</p>
+        <p>業務委託を希望。報酬よりも機会を重視しています。条件面の詳細は面談でお話しできればと思います</p>
       </div>
       <div class="condition-item">
         <h5>兼業について</h5>
@@ -1142,32 +1218,10 @@
   </div>
 
 
-  <!-- ===== 9. QUESTIONS ===== -->
-  <div class="section" id="sec-questions">
-    <div class="section-header">
-      <div class="section-num">9</div>
-      <h2 class="section-title">面談でお聞きしたいこと</h2>
-    </div>
-
-    <div class="card blue">
-      <ul>
-        <li>現在のClaude Codeコンサル事業で、クライアント企業の業種構成はどのようになっていますか？</li>
-        <li>コンサルタント1人あたりの担当社数の目安と、1社あたりの支援期間のイメージを教えてください</li>
-        <li>「日本一のClaude Codeコンサル部隊」に向けて、今最も課題に感じていることは何ですか？</li>
-      </ul>
-    </div>
-  </div>
-
-
-
   <!-- ===== CLOSING ===== -->
   <div class="closing">
-    <h3>人材紹介業界の中から来た、<br>Claude Codeを使い倒している経営者。<br>お力になれると確信しています。</h3>
-    <p>
-      業務委託でのご相談を希望しております。<br>
-      報酬は成果に応じた形で、<strong>柔軟にご相談させてください。</strong><br><br>
-      カジュアル面談の機会をいただけますと幸いです。
-    </p>
+    <p>自分の業務を実験台にして、<br>Claude Codeでどこまでできるかを<span class="closing-hl">試し続けてきました。</span></p>
+    <p style="margin-top:12px;">この経験が御社の事業にどう活きるか、<br><span class="closing-hl">直接お話しできる機会</span>をいただけますと幸いです。</p>
   </div>
 
 </div>
