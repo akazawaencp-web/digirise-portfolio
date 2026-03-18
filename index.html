@@ -389,7 +389,9 @@
   @media (max-width:768px) {
     .sidebar { display:none; }
     .hero { padding:40px 20px 32px; }
+    .hero-inner { max-width:100%; margin:0; }
     .hero h1 { font-size:22px; }
+    .hero-sub { font-size:13px; }
     .hero-stats { gap:16px; }
     .content { padding:28px 16px 60px; }
     .ba-grid { grid-template-columns:1fr; }
@@ -399,7 +401,24 @@
     .feature-cols { grid-template-columns:1fr; }
     .card { padding:18px 20px; }
     .impact-box,.closing { padding:24px 20px; }
-    .skill-grid { grid-template-columns:repeat(2,1fr); }
+    .skill-grid { grid-template-columns:1fr; }
+    .conditions-grid { grid-template-columns:1fr; }
+    .section-title { font-size:18px; }
+    .section-num { width:28px; height:28px; font-size:12px; }
+    /* フロー図を縦並びに */
+    .flow-diagram { flex-direction:column; align-items:center; }
+    .flow-arrow { transform:rotate(90deg); }
+    .flow-return { flex-direction:column; }
+    .flow-return-line { width:1px; height:20px; max-width:none; }
+    /* スクショ横並びを縦に */
+    .screenshot-toggle div[style*="display:flex"] { flex-direction:column !important; }
+    .screenshot-toggle img { width:100% !important; }
+    /* タイムライン箇条書き */
+    .psk-text ul { padding-left:14px; }
+    .psk-text li { font-size:13px; }
+    /* Closing */
+    .closing { padding:32px 20px; }
+    .closing p { font-size:14px; }
   }
 
   /* ===== PRODUCT TIMELINE (課題/解決/効果) ===== */
